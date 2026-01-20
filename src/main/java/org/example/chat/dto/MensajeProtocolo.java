@@ -8,3 +8,4 @@ public record MensajeProtocolo( // Renombrado a MensajeProtocolo
         String contenido,
         LocalDateTime fechaHora
 ) {}
+

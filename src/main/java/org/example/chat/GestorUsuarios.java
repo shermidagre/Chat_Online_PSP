@@ -2,7 +2,7 @@ package org.example.chat;
 
 import org.example.logging.RegistradorSeguridad; // Importar RegistradorSeguridad
 import org.example.model.Usuario; // Importar el modelo Usuario
-import org.example.repository.UsuarioRepository; // Importar el repositorio de Usuario
+import org.example.repository.RepositorioUsuarios; // Importar el repositorio de Usuario
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder; // Importar PasswordEncoder
@@ -19,7 +19,7 @@ public class GestorUsuarios {
 
     private static final Logger registrador = LoggerFactory.getLogger(GestorUsuarios.class);
 
-    private final UsuarioRepository repositorioUsuarios;
+    private final RepositorioUsuarios repositorioUsuarios;
     private final PasswordEncoder codificadorContrasenas;
 
     private final ConcurrentMap<String, ManejadorCliente> usuariosOnline = new ConcurrentHashMap<>();
@@ -28,7 +28,7 @@ public class GestorUsuarios {
 
     private final RegistradorSeguridad registradorSeguridad; // Usar RegistradorSeguridad
 
-    public GestorUsuarios(UsuarioRepository repositorioUsuarios, PasswordEncoder codificadorContrasenas, RegistradorSeguridad registradorSeguridad) {
+    public GestorUsuarios(RepositorioUsuarios repositorioUsuarios, PasswordEncoder codificadorContrasenas, RegistradorSeguridad registradorSeguridad) {
         this.repositorioUsuarios = repositorioUsuarios;
         this.codificadorContrasenas = codificadorContrasenas;
         this.registradorSeguridad = registradorSeguridad;

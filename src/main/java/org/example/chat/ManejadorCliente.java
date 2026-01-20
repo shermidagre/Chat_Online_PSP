@@ -133,12 +133,12 @@ public class ManejadorCliente implements Runnable {
     private void manejarMensajeCliente(String mensajeCrudo) {
         try {
             MensajeProtocolo mensaje = mapeadorObjetos.readValue(mensajeCrudo, MensajeProtocolo.class); // Usar MensajeProtocolo
-            switch (mensaje.getTipo()) { // Usar getTipo()
+            switch (mensaje.tipo()) { // Usar getTipo()
                 case "MENSAJE":
-                    difusorMensajes.difundir(mensaje.getContenido(), usuarioLogueado); // Usar difundir, getContenido()
+                    difusorMensajes.difundir(mensaje.contenido(), usuarioLogueado); // Usar difundir, getContenido()
                     break;
                 case "COMANDO":
-                    manejarComando(mensaje.getContenido()); // Usar getContenido()
+                    manejarComando(mensaje.contenido()); // Usar getContenido()
                     break;
                 default:
                     enviarMensaje("ERROR: Tipo de mensaje no reconocido.");
