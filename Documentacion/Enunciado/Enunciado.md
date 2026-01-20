@@ -1,10 +1,9 @@
-¡Claro! A continuación, te presento un **README.md** profesional y completo para tu repositorio de la **Práctica 02: Chat Corporativo** de la asignatura *Programación de Servicios y Procesos (PSP)*. Este README está pensado para cumplir con los requisitos del enunciado, incluyendo documentación del protocolo, arquitectura, pruebas y demás niveles alcanzados.
 
 ---
 
 
 ```markdown
-# 📡 Práctica 02 – Chat Corporativo Seguro
+# 📡 Chat Corporativo Seguro
 
 > **Asignatura**: Programación de Servicios y Procesos (PSP)  
 > **Curso**: DAM – Desarrollo de Aplicaciones Multiplataforma  

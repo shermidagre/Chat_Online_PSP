@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @RestController
-@RequestMapping(ArticulosController.MAPPING)
 @CrossOrigin(origins = "*")
 @Tag(name = "Usuarios", description = "Endpoints para interactuar con los usuarios")
 public class UsuariosController {
