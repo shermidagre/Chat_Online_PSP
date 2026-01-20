@@ -1,7 +1,7 @@
 package org.example.chat;
 
 import org.example.logging.SecurityLogger;
-import org.example.service.WeatherService; // Importar WeatherService
+import org.example.service.ServidorService; // Importar ServidorService
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -27,13 +27,13 @@ public class ChatServer implements Runnable {
     private final UserManager userManager;
     private final MessageBroadcaster messageBroadcaster;
     private final SecurityLogger securityLogger;
-    private final WeatherService weatherService; // Inyectar WeatherService
+    private final ServidorService servidorService; // Inyectar ServidorService
 
-    public ChatServer(UserManager userManager, MessageBroadcaster messageBroadcaster, SecurityLogger securityLogger, WeatherService weatherService) {
+    public ChatServer(UserManager userManager, MessageBroadcaster messageBroadcaster, SecurityLogger securityLogger, ServidorService servidorService) {
         this.userManager = userManager;
         this.messageBroadcaster = messageBroadcaster;
         this.securityLogger = securityLogger;
-        this.weatherService = weatherService; // Inicializar WeatherService
+        this.servidorService = servidorService; // Inicializar ServidorService
         this.clientHandlingPool = Executors.newFixedThreadPool(MAX_CONNECTIONS);
     }
 
@@ -59,8 +59,8 @@ public class ChatServer implements Runnable {
             try {
                 Socket clientSocket = serverSocket.accept();
                 logger.info("Nuevo cliente conectado desde: {}", clientSocket.getInetAddress().getHostAddress());
-                // Pasa 'this' (la instancia de ChatServer) y weatherService al ClientHandler
-                clientHandlingPool.execute(new ClientHandler(clientSocket, userManager, messageBroadcaster, securityLogger, this, weatherService));
+                // Pasa 'this' (la instancia de ChatServer) y servidorService al ClientHandler
+                clientHandlingPool.execute(new ClientHandler(clientSocket, userManager, messageBroadcaster, securityLogger, this, servidorService));
             } catch (IOException e) {
                 if (running) { // Solo loguear si el servidor aún debería estar corriendo
                     logger.error("Error al aceptar conexión de cliente: " + e.getMessage(), e);

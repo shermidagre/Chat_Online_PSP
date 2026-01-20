@@ -3,7 +3,7 @@ package org.example.chat;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.chat.dto.ProtocolMessage;
 import org.example.logging.SecurityLogger;
-import org.example.service.WeatherService; // Importar WeatherService
+import org.example.service.ServidorService; // Importar ServidorService
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,20 +23,20 @@ public class ClientHandler implements Runnable {
     private final MessageBroadcaster messageBroadcaster;
     private final SecurityLogger securityLogger;
     private final ChatServer chatServer;
-    private final WeatherService weatherService; // Inyectar WeatherService
+    private final ServidorService servidorService; // Inyectar ServidorService
     private BufferedReader in;
     private PrintWriter out;
     private String loggedInUser;
     private String userRole;
     private final ObjectMapper objectMapper;
 
-    public ClientHandler(Socket clientSocket, UserManager userManager, MessageBroadcaster messageBroadcaster, SecurityLogger securityLogger, ChatServer chatServer, WeatherService weatherService) {
+    public ClientHandler(Socket clientSocket, UserManager userManager, MessageBroadcaster messageBroadcaster, SecurityLogger securityLogger, ChatServer chatServer, ServidorService servidorService) {
         this.clientSocket = clientSocket;
         this.userManager = userManager;
         this.messageBroadcaster = messageBroadcaster;
         this.securityLogger = securityLogger;
         this.chatServer = chatServer;
-        this.weatherService = weatherService; // Inicializar WeatherService
+        this.servidorService = servidorService; // Inicializar ServidorService
         this.objectMapper = new ObjectMapper();
         this.objectMapper.findAndRegisterModules();
     }
@@ -166,7 +166,7 @@ public class ClientHandler implements Runnable {
             securityLogger.logAdminCommand(loggedInUser, clientIp, command); // Log command usage
             String[] parts = command.split(" ", 2);
             String city = (parts.length == 2) ? parts[1].trim() : "madrid"; // Default to Madrid if no city given
-            weatherService.getWeatherSummary(city).subscribe(this::sendMessage);
+            servidorService.getWeather(city).subscribe(this::sendMessage);
         }
         else if (command.startsWith("/kick")) {
             if (userManager.isAdmin(loggedInUser)) {
