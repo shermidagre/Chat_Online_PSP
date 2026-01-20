@@ -85,7 +85,7 @@ Se utiliza un protocolo basado en **JSON sobre texto plano**, con las siguientes
 
 ### *Estructura del proyecto en formaato diagrama de Mermaid :*
 
-```mmd
+```mermaid
 %%{init: {'theme': 'default'}}%%
 graph TD
     A[Práctica 02: Chat Corporativo] --> B[Nivel 1: Mínimo Obligatorio (5 pts)]
