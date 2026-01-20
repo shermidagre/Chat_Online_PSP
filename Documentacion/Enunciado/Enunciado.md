@@ -87,7 +87,7 @@ Se utiliza un protocolo basado en **JSON sobre texto plano**, con las siguientes
 ```mermaid
 graph TD
     %%{init: {'theme': 'default'}}%%
-    A[Práctica 02: Chat Corporativo] --> B[Nivel 1: Mínimo Obligatorio (5 pts)]
+A[Práctica 02: Chat Corporativo] --> B[Nivel 1: Mínimo Obligatorio (5 pts)]
 A --> C[Nivel 2: Documentación (1 pt)]
 A --> D[Nivel 3: Identidad y Control (2 pts)]
 A --> E[Nivel 4: SSL/TLS (1.5 pts)]
