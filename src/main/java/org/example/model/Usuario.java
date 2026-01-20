@@ -7,7 +7,7 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "Usuario") // El nombre de la tabla ya es singular y en español
-public class Usuario { // Renombrado a Usuario
+public class Usuario { // Clase Usuario
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,36 +31,36 @@ public class Usuario { // Renombrado a Usuario
 
     // Getters y Setters
 
-    public Long obtenerIdUsuario() { // Renombrado a obtenerIdUsuario
+    public Long getIdUsuario() { // Mantener getIdUsuario
         return idUsuario;
     }
 
-    public void establecerIdUsuario(Long idUsuario) { // Renombrado a establecerIdUsuario
+    public void setIdUsuario(Long idUsuario) { // Mantener setIdUsuario
         this.idUsuario = idUsuario;
     }
 
-    public String obtenerNombre() { // Renombrado a obtenerNombre
+    public String getNombre() { // Mantener getNombre
         return nombre;
     }
 
-    public void establecerNombre(String nombre) { // Renombrado a establecerNombre
+    public void setNombre(String nombre) { // Mantener setNombre
         this.nombre = nombre;
     }
 
-    public String obtenerTipoUsuario() { // Renombrado a obtenerTipoUsuario
+    public String getTipoUsuario() { // Mantener getTipoUsuario
         return tipoUsuario;
     }
-    public void establecerTipoUsuario(String tipoUsuario) { // Renombrado a establecerTipoUsuario
+    public void setTipoUsuario(String tipoUsuario) { // Mantener setTipoUsuario
         this.tipoUsuario = tipoUsuario;
     }
 
-    public String obtenerContrasena() { return contrasena; } // Renombrado a obtenerContrasena
-    public void establecerContrasena(String contrasena) { this.contrasena = contrasena; } // Renombrado a establecerContrasena
+    public String getContrasena() { return contrasena; } // get/set para contrasena
+    public void setContrasena(String contrasena) { this.contrasena = contrasena; } // get/set para contrasena
 
-    public String obtenerPuerto() { // Renombrado a obtenerPuerto
+    public String getPuerto() { // Mantener getPuerto
         return puerto;
     }
-    public void establecerPuerto(String puerto) { // Renombrado a establecerPuerto
+    public void setPuerto(String puerto) { // Mantener setPuerto
         this.puerto = puerto;
     }
 

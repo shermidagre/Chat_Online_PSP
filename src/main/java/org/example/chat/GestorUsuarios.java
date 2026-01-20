@@ -1,6 +1,6 @@
 package org.example.chat;
 
-import org.example.logging.SecurityLogger;
+import org.example.logging.RegistradorSeguridad; // Importar RegistradorSeguridad
 import org.example.model.Usuario; // Importar el modelo Usuario
 import org.example.repository.UsuarioRepository; // Importar el repositorio de Usuario
 import org.slf4j.Logger;
@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder; // Importar PasswordEncoder
 import org.springframework.stereotype.Component;
 
-import java.security.MessageDigest; // Todavía necesario para generar SHA-256 para el log (si es necesario)
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,25 +19,22 @@ public class GestorUsuarios {
 
     private static final Logger registrador = LoggerFactory.getLogger(GestorUsuarios.class);
 
-    private final UsuarioRepository repositorioUsuarios; // Repositorio de usuarios
-    private final PasswordEncoder codificadorContrasenas; // Codificador de contraseñas
+    private final UsuarioRepository repositorioUsuarios;
+    private final PasswordEncoder codificadorContrasenas;
 
-    // Almacena los ManejadorCliente de usuarios conectados, mapeados por su nombre de usuario
     private final ConcurrentMap<String, ManejadorCliente> usuariosOnline = new ConcurrentHashMap<>();
-    // Almacena los intentos fallidos de login por dirección IP
     private final ConcurrentMap<String, Integer> intentosFallidosLogin = new ConcurrentHashMap<>();
     private static final int MAX_INTENTOS_LOGIN = 3;
 
-    private final SecurityLogger registradorSeguridad;
+    private final RegistradorSeguridad registradorSeguridad; // Usar RegistradorSeguridad
 
-    public GestorUsuarios(UsuarioRepository repositorioUsuarios, PasswordEncoder codificadorContrasenas, SecurityLogger registradorSeguridad) {
+    public GestorUsuarios(UsuarioRepository repositorioUsuarios, PasswordEncoder codificadorContrasenas, RegistradorSeguridad registradorSeguridad) {
         this.repositorioUsuarios = repositorioUsuarios;
         this.codificadorContrasenas = codificadorContrasenas;
         this.registradorSeguridad = registradorSeguridad;
     }
 
     public boolean autenticar(String nombreUsuario, String contrasena, String ipCliente, ManejadorCliente manejador) {
-        // Incrementa los intentos fallidos para esta IP
         intentosFallidosLogin.merge(ipCliente, 1, Integer::sum);
 
         if (intentosFallidosLogin.getOrDefault(ipCliente, 0) > MAX_INTENTOS_LOGIN) {
@@ -57,25 +54,25 @@ public class GestorUsuarios {
         Usuario usuario = usuarioOpt.get();
 
         // CASO A: PRIMERA VEZ -> GUARDAR CONTRASEÑA ENCRIPTADA (si no tiene)
-        if (usuario.obtenerContrasena() == null || usuario.obtenerContrasena().isEmpty()) {
+        if (usuario.getContrasena() == null || usuario.getContrasena().isEmpty()) { // Usar getContrasena()
             String contrasenaHasheada = codificadorContrasenas.encode(contrasena);
-            usuario.establecerContrasena(contrasenaHasheada);
+            usuario.setContrasena(contrasenaHasheada); // Usar setContrasena()
             repositorioUsuarios.save(usuario);
             registrador.info("Contraseña establecida para usuario '{}' desde IP: {}", nombreUsuario, ipCliente);
             registradorSeguridad.registrarLoginExitoso(nombreUsuario, ipCliente, "Contraseña establecida");
             usuariosOnline.put(nombreUsuario, manejador);
             manejador.establecerUsuarioLogueado(nombreUsuario);
-            manejador.establecerRolUsuario(usuario.obtenerTipoUsuario());
+            manejador.establecerRolUsuario(usuario.getTipoUsuario()); // Usar getTipoUsuario()
             intentosFallidosLogin.remove(ipCliente);
             return true;
         } else {
             // CASO B: LOGIN NORMAL -> VERIFICAR CON MATCHES
-            if (codificadorContrasenas.matches(contrasena, usuario.obtenerContrasena())) {
+            if (codificadorContrasenas.matches(contrasena, usuario.getContrasena())) { // Usar getContrasena()
                 registrador.info("Login exitoso para usuario '{}' desde IP: {}", nombreUsuario, ipCliente);
                 registradorSeguridad.registrarLoginExitoso(nombreUsuario, ipCliente, "Login exitoso");
                 usuariosOnline.put(nombreUsuario, manejador);
                 manejador.establecerUsuarioLogueado(nombreUsuario);
-                manejador.establecerRolUsuario(usuario.obtenerTipoUsuario());
+                manejador.establecerRolUsuario(usuario.getTipoUsuario()); // Usar getTipoUsuario()
                 intentosFallidosLogin.remove(ipCliente);
                 return true;
             } else {
@@ -110,7 +107,7 @@ public class GestorUsuarios {
 
     public boolean esAdmin(String nombreUsuario) {
         Optional<Usuario> usuarioOpt = repositorioUsuarios.findByNombre(nombreUsuario);
-        return usuarioOpt.map(usuario -> "ADMIN".equalsIgnoreCase(usuario.obtenerTipoUsuario())).orElse(false);
+        return usuarioOpt.map(usuario -> "ADMIN".equalsIgnoreCase(usuario.getTipoUsuario())).orElse(false); // Usar getTipoUsuario()
     }
 
     public void resetearIntentosFallidos(String ipCliente) {

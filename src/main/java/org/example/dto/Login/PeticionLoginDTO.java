@@ -1,35 +1,35 @@
 package org.example.dto.Login;
 
-public class PeticionLoginDTO { // Renombrado a PeticionLoginDTO
+public class PeticionLoginDTO {
 
     private Long idUsuario;
-    private String contrasena; // Renombrado a contrasena
+    private String contrasena;
 
     // Constructor vacío (necesario para que Spring/Jackson funcione)
     public PeticionLoginDTO() {
     }
 
     // Constructor con campos (opcional, pero útil)
-    public PeticionLoginDTO(Long idUsuario, String contrasena) { // Renombrado a contrasena
+    public PeticionLoginDTO(Long idUsuario, String contrasena) {
         this.idUsuario = idUsuario;
-        this.contrasena = contrasena; // Renombrado a contrasena
+        this.contrasena = contrasena;
     }
 
     // --- Getters y Setters ---
 
-    public Long obtenerIdUsuario() { // Renombrado a obtenerIdUsuario
+    public Long getIdUsuario() { // Cambiado a getIdUsuario
         return idUsuario;
     }
 
-    public void establecerIdUsuario(Long idUsuario) { // Renombrado a establecerIdUsuario
+    public void setIdUsuario(Long idUsuario) { // Cambiado a setIdUsuario
         this.idUsuario = idUsuario;
     }
 
-    public String obtenerContrasena() { // Renombrado a obtenerContrasena
+    public String getContrasena() { // Cambiado a getContrasena
         return contrasena;
     }
 
-    public void establecerContrasena(String contrasena) { // Renombrado a establecerContrasena
+    public void setContrasena(String contrasena) { // Cambiado a setContrasena
         this.contrasena = contrasena;
     }
 }

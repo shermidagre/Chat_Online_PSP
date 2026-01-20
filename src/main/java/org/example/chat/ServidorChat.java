@@ -1,11 +1,9 @@
 package org.example.chat;
 
-import org.example.logging.SecurityLogger;
-import org.example.repository.UsuarioRepository; // Importar UsuarioRepository
-import org.example.service.ServidorService;
+import org.example.logging.RegistradorSeguridad; // Importar RegistradorSeguridad
+import org.example.service.ServicioServidor; // Importar ServicioServidor
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.crypto.password.PasswordEncoder; // Importar PasswordEncoder
 import org.springframework.stereotype.Component;
 
 import javax.net.ssl.SSLServerSocket;
@@ -28,12 +26,12 @@ public class ServidorChat implements Runnable {
 
     private final GestorUsuarios gestorUsuarios;
     private final DifusorMensajes difusorMensajes;
-    private final SecurityLogger registradorSeguridad;
-    private final ServidorService servicioServidor;
+    private final RegistradorSeguridad registradorSeguridad; // Usar RegistradorSeguridad
+    private final ServicioServidor servicioServidor; // Usar ServicioServidor
 
-    // Constructor actualizado para inyectar UsuarioRepository y PasswordEncoder
-    public ServidorChat(UsuarioRepository repositorioUsuarios, PasswordEncoder codificadorContrasenas, GestorUsuarios gestorUsuarios, DifusorMensajes difusorMensajes, SecurityLogger registradorSeguridad, ServidorService servicioServidor) {
-        this.gestorUsuarios = new GestorUsuarios(repositorioUsuarios, codificadorContrasenas, registradorSeguridad); // Se instancia aquí
+    // Constructor actualizado para inyectar GestorUsuarios, DifusorMensajes, RegistradorSeguridad, ServicioServidor
+    public ServidorChat(GestorUsuarios gestorUsuarios, DifusorMensajes difusorMensajes, RegistradorSeguridad registradorSeguridad, ServicioServidor servicioServidor) {
+        this.gestorUsuarios = gestorUsuarios; // Usar la instancia inyectada
         this.difusorMensajes = difusorMensajes;
         this.registradorSeguridad = registradorSeguridad;
         this.servicioServidor = servicioServidor;
@@ -83,6 +81,6 @@ public class ServidorChat implements Runnable {
                 registrador.error("Error al cerrar el SocketServidor: " + e.getMessage(), e);
             }
         }
-        registradorSeguridad.close(); // Cerrar el RegistradorSeguridad al detener el servidor
+        registradorSeguridad.cerrar(); // Cerrar el RegistradorSeguridad al detener el servidor (método cerrar)
     }
 }

@@ -1,6 +1,6 @@
 package org.example.service;
 
-import org.example.service.weather.WeatherResponse; // Necesita ser RespuestaClima
+import org.example.service.weather.RespuestaClima;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,39 +9,39 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 @Service
-public class ServicioClima { // Renombrado a ServicioClima
+public class ServicioClima {
 
-    private static final Logger registrador = LoggerFactory.getLogger(ServicioClima.class); // Renombrado a registrador
-    private final WebClient clienteWeb; // Renombrado a clienteWeb
-    private final String claveApi; // Renombrado a claveApi
+    private static final Logger registrador = LoggerFactory.getLogger(ServicioClima.class);
+    private final WebClient clienteWeb;
+    private final String claveApi;
 
     // Puedes obtener una clave API gratuita en OpenWeatherMap.org
-    private static final String URL_BASE = "https://api.openweathermap.org/data/2.5/weather"; // Renombrado a URL_BASE
+    private static final String URL_BASE = "https://api.openweathermap.org/data/2.5/weather";
 
-    public ServicioClima(@Value("${openweathermap.api-key:YOUR_OPENWEATHERMAP_API_KEY}") String claveApi) { // Renombrado a claveApi
+    public ServicioClima(@Value("${openweathermap.api-key:YOUR_OPENWEATHERMAP_API_KEY}") String claveApi) {
         this.claveApi = claveApi;
         this.clienteWeb = WebClient.builder()
                 .baseUrl(URL_BASE)
                 .build();
     }
 
-    public Mono<String> obtenerResumenClima(String ciudad) { // Renombrado a obtenerResumenClima, ciudad
+    public Mono<String> obtenerResumenClima(String ciudad) {
         return clienteWeb.get()
                 .uri(uriBuilder -> uriBuilder
-                        .queryParam("q", ciudad) // ciudad
-                        .queryParam("appid", claveApi) // claveApi
+                        .queryParam("q", ciudad)
+                        .queryParam("appid", claveApi)
                         .queryParam("units", "metric") // Para obtener temperatura en Celsius
                         .queryParam("lang", "es")    // Para obtener descripción en español
                         .build())
                 .retrieve()
-                .bodyToMono(RespuestaClima.class) // Necesita ser RespuestaClima
-                .map(respuesta -> { // Renombrado a respuesta
-                    if (respuesta.weather().length > 0) {
-                        String descripcion = respuesta.weather()[0].description(); // Renombrado a descripcion
-                        double temp = respuesta.main().temp();
-                        double sensacionTermica = respuesta.main().feelsLike(); // Renombrado a sensacionTermica
+                .bodyToMono(RespuestaClima.class)
+                .map(respuesta -> {
+                    if (respuesta.clima().length > 0) { // Usar respuesta.clima()
+                        String descripcion = respuesta.clima()[0].descripcion(); // Usar respuesta.clima()[0].descripcion()
+                        double temp = respuesta.principal().temperatura(); // Usar respuesta.principal().temperatura()
+                        double sensacionTermica = respuesta.principal().sensacionTermica(); // Usar respuesta.principal().sensacionTermica()
                         return String.format("El tiempo en %s: %s, %.1f°C (sensación térmica %.1f°C).",
-                                respuesta.name(), descripcion, temp, sensacionTermica);
+                                respuesta.nombre(), descripcion, temp, sensacionTermica); // Usar respuesta.nombre()
                     }
                     return "No se pudo obtener el tiempo para " + ciudad;
                 })

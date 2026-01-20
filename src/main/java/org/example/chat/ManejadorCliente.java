@@ -1,9 +1,9 @@
 package org.example.chat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.chat.dto.ProtocolMessage;
-import org.example.logging.SecurityLogger;
-import org.example.service.ServidorService;
+import org.example.chat.dto.MensajeProtocolo; // Importar MensajeProtocolo
+import org.example.logging.RegistradorSeguridad; // Importar RegistradorSeguridad
+import org.example.service.ServicioServidor; // Importar ServicioServidor
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,18 +19,18 @@ public class ManejadorCliente implements Runnable {
 
     private static final Logger registrador = LoggerFactory.getLogger(ManejadorCliente.class);
     private final Socket socketCliente;
-    private final UserManager gestorUsuarios;
-    private final MessageBroadcaster difusorMensajes;
-    private final SecurityLogger registradorSeguridad;
-    private final ChatServer servidorChat;
-    private final ServidorService servicioServidor;
+    private final GestorUsuarios gestorUsuarios; // Usar GestorUsuarios
+    private final DifusorMensajes difusorMensajes; // Usar DifusorMensajes
+    private final RegistradorSeguridad registradorSeguridad; // Usar RegistradorSeguridad
+    private final ServidorChat servidorChat; // Usar ServidorChat
+    private final ServicioServidor servicioServidor; // Usar ServicioServidor
     private BufferedReader entrada;
     private PrintWriter salida;
     private String usuarioLogueado;
     private String rolUsuario;
     private final ObjectMapper mapeadorObjetos;
 
-    public ManejadorCliente(Socket socketCliente, UserManager gestorUsuarios, MessageBroadcaster difusorMensajes, SecurityLogger registradorSeguridad, ChatServer servidorChat, ServidorService servicioServidor) {
+    public ManejadorCliente(Socket socketCliente, GestorUsuarios gestorUsuarios, DifusorMensajes difusorMensajes, RegistradorSeguridad registradorSeguridad, ServidorChat servidorChat, ServicioServidor servicioServidor) {
         this.socketCliente = socketCliente;
         this.gestorUsuarios = gestorUsuarios;
         this.difusorMensajes = difusorMensajes;
@@ -101,9 +101,9 @@ public class ManejadorCliente implements Runnable {
                 String contrasena = credenciales.get()[1];
                 String ipCliente = socketCliente.getInetAddress().getHostAddress();
 
-                if (gestorUsuarios.authenticate(nombreUsuario, contrasena, ipCliente, this)) {
+                if (gestorUsuarios.autenticar(nombreUsuario, contrasena, ipCliente, this)) { // Usar autenticar
                     enviarMensaje("AUTENTICACION_EXITOSA");
-                    difusorMensajes.broadcast(usuarioLogueado + " se ha unido al chat.", "Sistema");
+                    difusorMensajes.difundir(usuarioLogueado + " se ha unido al chat.", "Sistema"); // Usar difundir
                     registrador.info("Usuario '{}' autenticado con éxito desde IP: {}", usuarioLogueado, ipCliente);
                     return;
                 } else {
@@ -118,7 +118,7 @@ public class ManejadorCliente implements Runnable {
         }
         enviarMensaje("AUTENTICACION_BLOQUEADA: Demasiados intentos fallidos. Conexión cerrada.");
         registrador.warn("Cliente {} bloqueado por exceso de intentos de login.", socketCliente.getInetAddress().getHostAddress());
-        registradorSeguridad.logFailedLoginAttempt("IP_BLOQUEADA", socketCliente.getInetAddress().getHostAddress(), "Cliente bloqueado por exceso de intentos.");
+        registradorSeguridad.registrarIntentoLoginFallido("IP_BLOQUEADA", socketCliente.getInetAddress().getHostAddress(), "Cliente bloqueado por exceso de intentos."); // Usar registrarIntentoLoginFallido
         desconectarCliente();
     }
 
@@ -132,13 +132,13 @@ public class ManejadorCliente implements Runnable {
 
     private void manejarMensajeCliente(String mensajeCrudo) {
         try {
-            ProtocolMessage mensaje = mapeadorObjetos.readValue(mensajeCrudo, ProtocolMessage.class);
-            switch (mensaje.tipo()) { // Usar mensaje.tipo()
-                case "MENSAJE": // Traducir "MESSAGE"
-                    difusorMensajes.broadcast(mensaje.contenido(), usuarioLogueado); // Usar mensaje.contenido()
+            MensajeProtocolo mensaje = mapeadorObjetos.readValue(mensajeCrudo, MensajeProtocolo.class); // Usar MensajeProtocolo
+            switch (mensaje.getTipo()) { // Usar getTipo()
+                case "MENSAJE":
+                    difusorMensajes.difundir(mensaje.getContenido(), usuarioLogueado); // Usar difundir, getContenido()
                     break;
-                case "COMANDO": // Traducir "COMMAND"
-                    manejarComando(mensaje.contenido()); // Usar mensaje.contenido()
+                case "COMANDO":
+                    manejarComando(mensaje.getContenido()); // Usar getContenido()
                     break;
                 default:
                     enviarMensaje("ERROR: Tipo de mensaje no reconocido.");
@@ -154,55 +154,55 @@ public class ManejadorCliente implements Runnable {
         String ipCliente = socketCliente.getInetAddress().getHostAddress();
         if (comando.startsWith("/bye")) {
             enviarMensaje("ADIOS: Desconectando...");
-            registradorSeguridad.logAdminCommand(usuarioLogueado, ipCliente, comando);
+            registradorSeguridad.registrarComandoAdmin(usuarioLogueado, ipCliente, comando); // Usar registrarComandoAdmin
             desconectarCliente();
         } else if (comando.startsWith("/list")) {
-            enviarMensaje("Usuarios online: " + String.join(", ", gestorUsuarios.getOnlineUsers().keySet()));
-            registradorSeguridad.logAdminCommand(usuarioLogueado, ipCliente, comando);
+            enviarMensaje("Usuarios online: " + String.join(", ", gestorUsuarios.obtenerUsuariosOnline().keySet())); // Usar obtenerUsuariosOnline
+            registradorSeguridad.registrarComandoAdmin(usuarioLogueado, ipCliente, comando);
         } else if (comando.startsWith("/ping")) {
             enviarMensaje("PONG " + LocalDateTime.now());
-            registradorSeguridad.logAdminCommand(usuarioLogueado, ipCliente, comando);
+            registradorSeguridad.registrarComandoAdmin(usuarioLogueado, ipCliente, comando);
         } else if (comando.startsWith("/weather")) {
-            registradorSeguridad.logAdminCommand(usuarioLogueado, ipCliente, comando);
+            registradorSeguridad.registrarComandoAdmin(usuarioLogueado, ipCliente, comando);
             String[] partes = comando.split(" ", 2);
             String ciudad = (partes.length == 2) ? partes[1].trim() : "madrid";
-            servicioServidor.getWeather(ciudad).subscribe(this::enviarMensaje);
+            servicioServidor.obtenerClima(ciudad).subscribe(this::enviarMensaje); // Usar obtenerClima
         }
         else if (comando.startsWith("/kick")) {
-            if (gestorUsuarios.isAdmin(usuarioLogueado)) {
+            if (gestorUsuarios.esAdmin(usuarioLogueado)) { // Usar esAdmin
                 String[] partes = comando.split(" ", 2);
                 if (partes.length == 2) {
                     String usuarioObjetivo = partes[1].trim();
-                    ManejadorCliente manejadorObjetivo = gestorUsuarios.getClientHandler(usuarioObjetivo); // getClientHandler will also need to be translated
+                    ManejadorCliente manejadorObjetivo = gestorUsuarios.obtenerManejadorCliente(usuarioObjetivo); // Usar obtenerManejadorCliente
                     if (manejadorObjetivo != null) {
                         manejadorObjetivo.enviarMensaje("EXPULSADO: Has sido expulsado por un administrador.");
                         manejadorObjetivo.desconectarCliente();
-                        difusorMensajes.broadcast(usuarioObjetivo + " ha sido expulsado por " + usuarioLogueado + ".", "Sistema");
-                        registradorSeguridad.logAdminCommand(usuarioLogueado, ipCliente, "Usuario expulsado: " + usuarioObjetivo);
+                        difusorMensajes.difundir(usuarioObjetivo + " ha sido expulsado por " + usuarioLogueado + ".", "Sistema"); // Usar difundir
+                        registradorSeguridad.registrarComandoAdmin(usuarioLogueado, ipCliente, "Usuario expulsado: " + usuarioObjetivo);
                     } else {
                         enviarMensaje("ERROR: Usuario '" + usuarioObjetivo + "' no encontrado o no online.");
-                        registradorSeguridad.logAdminCommand(usuarioLogueado, ipCliente, "Intento de expulsar usuario inexistente/desconectado: " + usuarioObjetivo);
+                        registradorSeguridad.registrarComandoAdmin(usuarioLogueado, ipCliente, "Intento de expulsar usuario inexistente/desconectado: " + usuarioObjetivo);
                     }
                 } else {
                     enviarMensaje("ERROR: Uso: /kick <nombre_usuario>");
-                    registradorSeguridad.logAdminCommand(usuarioLogueado, ipCliente, "Formato de comando /kick inválido.");
+                    registradorSeguridad.registrarComandoAdmin(usuarioLogueado, ipCliente, "Formato de comando /kick inválido.");
                 }
             } else {
                 enviarMensaje("ERROR: Permiso denegado. Solo administradores pueden usar /kick.");
-                registradorSeguridad.logAdminCommand(usuarioLogueado, ipCliente, "Intento no autorizado de /kick.");
+                registradorSeguridad.registrarComandoAdmin(usuarioLogueado, ipCliente, "Intento no autorizado de /kick.");
             }
         } else if (comando.startsWith("/shutdown")) {
-            if (gestorUsuarios.isAdmin(usuarioLogueado)) {
-                difusorMensajes.broadcast("El servidor se está apagando por orden de " + usuarioLogueado + ".", "Sistema");
-                registradorSeguridad.logAdminCommand(usuarioLogueado, ipCliente, "Apagado del servidor iniciado.");
-                servidorChat.stop();
+            if (gestorUsuarios.esAdmin(usuarioLogueado)) { // Usar esAdmin
+                difusorMensajes.difundir("El servidor se está apagando por orden de " + usuarioLogueado + ".", "Sistema"); // Usar difundir
+                registradorSeguridad.registrarComandoAdmin(usuarioLogueado, ipCliente, "Apagado del servidor iniciado.");
+                servidorChat.detener(); // Usar detener
             } else {
                 enviarMensaje("ERROR: Permiso denegado. Solo administradores pueden usar /shutdown.");
-                registradorSeguridad.logAdminCommand(usuarioLogueado, ipCliente, "Intento no autorizado de /shutdown.");
+                registradorSeguridad.registrarComandoAdmin(usuarioLogueado, ipCliente, "Intento no autorizado de /shutdown.");
             }
         } else {
             enviarMensaje("ERROR: Comando no reconocido.");
-            registradorSeguridad.logAdminCommand(usuarioLogueado, ipCliente, "Comando no reconocido: " + comando);
+            registradorSeguridad.registrarComandoAdmin(usuarioLogueado, ipCliente, "Comando no reconocido: " + comando);
         }
     }
 
@@ -212,19 +212,19 @@ public class ManejadorCliente implements Runnable {
 
     private void desconectarCliente() {
         if (usuarioLogueado != null) {
-            gestorUsuarios.userLoggedOut(usuarioLogueado, socketCliente.getInetAddress().getHostAddress()); // userLoggedOut will also need translation
-            difusorMensajes.broadcast(usuarioLogueado + " ha abandonado el chat.", "Sistema");
+            gestorUsuarios.usuarioDesconectado(usuarioLogueado, socketCliente.getInetAddress().getHostAddress()); // Usar usuarioDesconectado
+            difusorMensajes.difundir(usuarioLogueado + " ha abandonado el chat.", "Sistema"); // Usar difundir
             registrador.info("Usuario '{}' desconectado.", usuarioLogueado);
-            registradorSeguridad.logUserStatusChange(usuarioLogueado, socketCliente.getInetAddress().getHostAddress(), "DESCONEXION");
+            registradorSeguridad.registrarCambioEstadoUsuario(usuarioLogueado, socketCliente.getInetAddress().getHostAddress(), "DESCONEXION"); // Usar registrarCambioEstadoUsuario
         } else {
             registrador.info("Cliente anónimo desconectado desde IP: {}", socketCliente.getInetAddress().getHostAddress());
-            registradorSeguridad.logUserStatusChange("anonimo", socketCliente.getInetAddress().getHostAddress(), "DESCONEXION");
+            registradorSeguridad.registrarCambioEstadoUsuario("anonimo", socketCliente.getInetAddress().getHostAddress(), "DESCONEXION");
         }
 
         try {
             if (entrada != null) entrada.close();
             if (salida != null) salida.close();
-            if (socketCliente != null && !socketCliente.isClosed()) socketCliente.close(); // clientSocket here
+            if (socketCliente != null && !socketCliente.isClosed()) socketCliente.close();
         } catch (IOException e) {
             registrador.error("Error al cerrar recursos del cliente: {}", e.getMessage());
         }

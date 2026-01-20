@@ -4,18 +4,18 @@ package org.example.dto.Usuarios;
 
 import jakarta.validation.constraints.NotBlank;
 
-public class PeticionUsuariosDTO { // Renombrado a PeticionUsuariosDTO
+public class PeticionUsuariosDTO {
 
     @NotBlank(message = "El nombre del usuario es obligatorio")
-    private String nombre; // Ya está en español
+    private String nombre;
 
-    private String tipoUsuario; // Ya está en español
+    private String tipoUsuario;
 
     // --- Getters y Setters ---
 
-    public String obtenerNombre() { return nombre; } // Renombrado a obtenerNombre
-    public void establecerNombre(String nombre) { this.nombre = nombre; } // Renombrado a establecerNombre
+    public String getNombre() { return nombre; } // Cambiado a getNombre
+    public void setNombre(String nombre) { this.nombre = nombre; } // Cambiado a setNombre
 
-    public String obtenerTipoUsuario() { return tipoUsuario; } // Renombrado a obtenerTipoUsuario
-    public void establecerTipoUsuario(String tipoUsuario) { this.tipoUsuario = tipoUsuario; } // Renombrado a establecerTipoUsuario
+    public String getTipoUsuario() { return tipoUsuario; } // Cambiado a getTipoUsuario
+    public void setTipoUsuario(String tipoUsuario) { this.tipoUsuario = tipoUsuario; } // Cambiado a setTipoUsuario
 }
