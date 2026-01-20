@@ -2,7 +2,7 @@
   {
     "nombre": "alice",
     "password_sha256": "240be045f49e49c7161b965ee1a3556f8f1766a4a2b953d6641887e502c31e7f",
-    "tipoUsuario": "USER"
+    "tipoUsuario": "USUARIO"
   },
   {
     "nombre": "admin",

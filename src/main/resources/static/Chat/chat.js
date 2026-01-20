@@ -1,180 +1,180 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const chatMessages = document.getElementById('chatMessages');
-    const usernameInput = document.getElementById('usernameInput');
-    const passwordInput = document.getElementById('passwordInput');
-    const loginButton = document.getElementById('loginButton');
-    const messageInput = document.getElementById('messageInput');
-    const sendButton = document.getElementById('sendButton');
-    const statusDiv = document.getElementById('status');
+    const mensajesChat = document.getElementById('mensajesChat'); // Renombrado a mensajesChat
+    const entradaUsuario = document.getElementById('entradaUsuario'); // Renombrado a entradaUsuario
+    const entradaContrasena = document.getElementById('entradaContrasena'); // Renombrado a entradaContrasena
+    const botonAcceso = document.getElementById('botonAcceso'); // Renombrado a botonAcceso
+    const entradaMensaje = document.getElementById('entradaMensaje'); // Renombrado a entradaMensaje
+    const botonEnviar = document.getElementById('botonEnviar'); // Renombrado a botonEnviar
+    const divEstado = document.getElementById('estado'); // Renombrado a divEstado (de 'status')
 
     let ws; // WebSocket
-    let isLoggedIn = false;
-    const serverAddress = `wss://${window.location.hostname}:8081`; // Usamos wss para SSL/TLS
+    let sesionIniciada = false; // Renombrado a sesionIniciada
+    const direccionServidor = `wss://${window.location.hostname}:8081`; // Renombrado a direccionServidor
 
     // --- Funciones de Utilidad ---
 
-    function appendMessage(message, type = '') {
-        const messageElement = document.createElement('div');
-        messageElement.classList.add('message');
-        if (type) {
-            messageElement.classList.add(type);
+    function adjuntarMensaje(mensaje, tipo = '') { // Renombrado a adjuntarMensaje
+        const elementoMensaje = document.createElement('div'); // Renombrado a elementoMensaje
+        elementoMensaje.classList.add('mensaje'); // Renombrado a 'mensaje'
+        if (tipo) {
+            elementoMensaje.classList.add(tipo);
         }
-        messageElement.textContent = message;
-        chatMessages.appendChild(messageElement);
-        chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll automático al final
+        elementoMensaje.textContent = mensaje;
+        mensajesChat.appendChild(elementoMensaje);
+        mensajesChat.scrollTop = mensajesChat.scrollHeight; // Scroll automático al final
     }
 
-    function setStatus(text, isOnline = false) {
-        statusDiv.textContent = text;
-        statusDiv.className = isOnline ? 'status-online' : 'status-offline';
+    function establecerEstado(texto, estaConectado = false) { // Renombrado a establecerEstado, estaConectado
+        divEstado.textContent = texto;
+        divEstado.className = estaConectado ? 'estado-conectado' : 'estado-desconectado'; // Renombrado a 'estado-conectado' y 'estado-desconectado'
     }
 
-    function enableChatUI(enable) {
-        messageInput.disabled = !enable;
-        sendButton.disabled = !enable;
-        if (enable) {
-            messageInput.focus();
-        }
-    }
-
-    function enableLoginUI(enable) {
-        usernameInput.disabled = !enable;
-        passwordInput.disabled = !enable;
-        loginButton.disabled = !enable;
-        if (enable) {
-            usernameInput.focus();
+    function habilitarInterfazChat(habilitar) { // Renombrado a habilitarInterfazChat, habilitar
+        entradaMensaje.disabled = !habilitar;
+        botonEnviar.disabled = !habilitar;
+        if (habilitar) {
+            entradaMensaje.focus();
         }
     }
 
-    function sendMessageToServer(type, content) {
+    function habilitarInterfazLogin(habilitar) { // Renombrado a habilitarInterfazLogin, habilitar
+        entradaUsuario.disabled = !habilitar;
+        entradaContrasena.disabled = !habilitar;
+        botonAcceso.disabled = !habilitar;
+        if (habilitar) {
+            entradaUsuario.focus();
+        }
+    }
+
+    function enviarMensajeAlServidor(tipo, contenido) { // Renombrado a enviarMensajeAlServidor, tipo, contenido
         if (ws && ws.readyState === WebSocket.OPEN) {
-            const message = {
-                type: type,
-                sender: usernameInput.value, // El servidor validará esto
-                content: content,
-                timestamp: new Date().toISOString()
+            const mensaje = { // Renombrado a mensaje
+                tipo: tipo, // Renombrado a tipo
+                remitente: entradaUsuario.value, // Renombrado a remitente
+                contenido: contenido, // Renombrado a contenido
+                fechaHora: new Date().toISOString() // Renombrado a fechaHora
             };
-            ws.send(JSON.stringify(message));
+            ws.send(JSON.stringify(mensaje));
         } else {
-            appendMessage("No estás conectado al servidor.", "system");
+            adjuntarMensaje("No estás conectado al servidor.", "sistema"); // Renombrado a "sistema"
         }
     }
 
     // --- Lógica WebSocket ---
 
-    function connectWebSocket() {
+    function conectarWebSocket() { // Renombrado a conectarWebSocket
         if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
             ws.close();
         }
 
-        ws = new WebSocket(serverAddress);
-        setStatus('Conectando...', false);
+        ws = new WebSocket(direccionServidor);
+        establecerEstado('Conectando...', false);
 
         ws.onopen = () => {
             console.log('Conexión WebSocket establecida.');
-            setStatus('Conectado. Esperando autenticación...', false);
-            enableLoginUI(true);
-            enableChatUI(false); // Deshabilitar chat hasta login
+            establecerEstado('Conectado. Esperando autenticación...', false);
+            habilitarInterfazLogin(true);
+            habilitarInterfazChat(false); // Deshabilitar chat hasta login
         };
 
-        ws.onmessage = (event) => {
-            console.log('Mensaje del servidor:', event.data);
+        ws.onmessage = (evento) => { // Renombrado a evento
+            console.log('Mensaje del servidor:', evento.data);
             try {
-                // El servidor envía mensajes de texto plano para AUTH, etc.
+                // El servidor envía mensajes de texto plano para AUTENTICACION, etc.
                 // Y JSON para mensajes de chat.
                 // Intentamos parsear como JSON primero.
-                const serverMessage = JSON.parse(event.data);
+                const mensajeServidor = JSON.parse(evento.data); // Renombrado a mensajeServidor
                 // Si es un mensaje de protocolo (del chat), lo mostramos directamente
-                appendMessage(`${serverMessage.sender || 'Sistema'}: ${serverMessage.content}`);
+                adjuntarMensaje(`${mensajeServidor.remitente || 'Sistema'}: ${mensajeServidor.contenido}`); // Renombrado a remitente, contenido
 
             } catch (e) {
                 // No es JSON, es un mensaje de control de texto plano.
-                const textMessage = event.data;
-                handleServerControlMessage(textMessage);
+                const mensajeTexto = evento.data; // Renombrado a mensajeTexto
+                manejarMensajeControlServidor(mensajeTexto); // Renombrado a manejarMensajeControlServidor
             }
         };
 
         ws.onclose = () => {
             console.log('Conexión WebSocket cerrada.');
-            setStatus('Desconectado', false);
-            isLoggedIn = false;
-            enableChatUI(false);
-            enableLoginUI(true); // Permitir re-login
-            appendMessage("Conexión perdida con el servidor.", "system");
+            establecerEstado('Desconectado', false);
+            sesionIniciada = false; // Renombrado a sesionIniciada
+            habilitarInterfazChat(false);
+            habilitarInterfazLogin(true); // Permitir re-login
+            adjuntarMensaje("Conexión perdida con el servidor.", "sistema"); // Renombrado a "sistema"
         };
 
         ws.onerror = (error) => {
             console.error('Error WebSocket:', error);
-            setStatus('Error de conexión', false);
-            appendMessage("Error en la conexión WebSocket. Inténtalo de nuevo.", "system");
+            establecerEstado('Error de conexión', false);
+            adjuntarMensaje("Error en la conexión WebSocket. Inténtalo de nuevo.", "sistema"); // Renombrado a "sistema"
             ws.close();
         };
     }
 
-    function handleServerControlMessage(message) {
-        if (message.startsWith("AUTH_REQUIRED")) {
-            appendMessage("Autenticación requerida. Introduce tus credenciales.", "auth-required");
-        } else if (message.startsWith("AUTH_SUCCESS")) {
-            appendMessage("Autenticación exitosa. ¡Bienvenido al chat!", "auth-success");
-            isLoggedIn = true;
-            setStatus(`Online como ${usernameInput.value}`, true);
-            enableLoginUI(false);
-            enableChatUI(true);
-        } else if (message.startsWith("AUTH_FAILED")) {
-            appendMessage("Autenticación fallida. Credenciales incorrectas o usuario bloqueado.", "auth-failed");
-            passwordInput.value = ''; // Limpiar contraseña
-            enableChatUI(false);
-            enableLoginUI(true);
-        } else if (message.startsWith("AUTH_BLOCKED")) {
-            appendMessage("Demasiados intentos fallidos. Tu IP ha sido bloqueada. Conexión cerrada.", "auth-blocked");
-            isLoggedIn = false;
+    function manejarMensajeControlServidor(mensaje) { // Renombrado a manejarMensajeControlServidor
+        if (mensaje.startsWith("AUTENTICACION_REQUERIDA")) { // Renombrado a "AUTENTICACION_REQUERIDA"
+            adjuntarMensaje("Autenticación requerida. Introduce tus credenciales.", "autenticacion-requerida"); // Renombrado a "autenticacion-requerida"
+        } else if (mensaje.startsWith("AUTENTICACION_EXITOSA")) { // Renombrado a "AUTENTICACION_EXITOSA"
+            adjuntarMensaje("Autenticación exitosa. ¡Bienvenido al chat!", "autenticacion-exitosa"); // Renombrado a "autenticacion-exitosa"
+            sesionIniciada = true; // Renombrado a sesionIniciada
+            establecerEstado(`Online como ${entradaUsuario.value}`, true);
+            habilitarInterfazLogin(false);
+            habilitarInterfazChat(true);
+        } else if (mensaje.startsWith("AUTENTICACION_FALLIDA")) { // Renombrado a "AUTENTICACION_FALLIDA"
+            adjuntarMensaje("Autenticación fallida. Credenciales incorrectas o usuario bloqueado.", "autenticacion-fallida"); // Renombrado a "autenticacion-fallida"
+            entradaContrasena.value = ''; // Limpiar contraseña
+            habilitarInterfazChat(false);
+            habilitarInterfazLogin(true);
+        } else if (mensaje.startsWith("AUTENTICACION_BLOQUEADA")) { // Renombrado a "AUTENTICACION_BLOQUEADA"
+            adjuntarMensaje("Demasiados intentos fallidos. Tu IP ha sido bloqueada. Conexión cerrada.", "autenticacion-bloqueada"); // Renombrado a "autenticacion-bloqueada"
+            sesionIniciada = false; // Renombrado a sesionIniciada
             ws.close(); // El servidor debería cerrar la conexión, pero por si acaso.
-            enableChatUI(false);
-            enableLoginUI(false); // Bloquear UI de login
-        } else if (message.startsWith("FORMAT_ERROR")) {
-            appendMessage(message.replace("FORMAT_ERROR: ", ""), "format-error");
-        } else if (message.startsWith("BYE")) {
-            appendMessage("Desconectado por el servidor. Adiós.", "system");
+            habilitarInterfazChat(false);
+            habilitarInterfazLogin(false); // Bloquear UI de login
+        } else if (mensaje.startsWith("ERROR_FORMATO")) { // Renombrado a "ERROR_FORMATO"
+            adjuntarMensaje(mensaje.replace("ERROR_FORMATO: ", ""), "error-formato"); // Renombrado a "error-formato"
+        } else if (mensaje.startsWith("ADIOS")) { // Renombrado a "ADIOS"
+            adjuntarMensaje("Desconectado por el servidor. Adiós.", "sistema"); // Renombrado a "sistema"
             ws.close();
         } else {
             // Mensajes generales del sistema o notificaciones de texto plano
-            appendMessage(message, "system");
+            adjuntarMensaje(mensaje, "sistema"); // Renombrado a "sistema"
         }
     }
 
     // --- Event Listeners ---
 
-    loginButton.addEventListener('click', () => {
-        const username = usernameInput.value.trim();
-        const password = passwordInput.value; // No trim en la contraseña
-        if (username && password) {
-            // El formato de "AUTH" se maneja en el ClientHandler, aquí solo enviamos el string
-            sendMessageToServer("AUTH", `${username}:${password}`);
+    botonAcceso.addEventListener('click', () => { // Renombrado a botonAcceso
+        const nombreUsuario = entradaUsuario.value.trim(); // Renombrado a nombreUsuario
+        const contrasena = entradaContrasena.value; // Renombrado a contrasena
+        if (nombreUsuario && contrasena) {
+            // El formato de "AUTENTICACION" se maneja en el ManejadorCliente, aquí solo enviamos el string
+            enviarMensajeAlServidor("AUTENTICACION", `${nombreUsuario}:${contrasena}`); // Renombrado a "AUTENTICACION"
         } else {
-            appendMessage("Por favor, introduce usuario y contraseña.", "format-error");
+            adjuntarMensaje("Por favor, introduce usuario y contraseña.", "error-formato"); // Renombrado a "error-formato"
         }
     });
 
-    messageInput.addEventListener('keypress', (e) => {
+    entradaMensaje.addEventListener('keypress', (e) => { // Renombrado a entradaMensaje
         if (e.key === 'Enter') {
-            sendButton.click();
+            botonEnviar.click(); // Renombrado a botonEnviar
         }
     });
 
-    sendButton.addEventListener('click', () => {
-        const message = messageInput.value.trim();
-        if (message) {
-            if (message.startsWith('/')) {
+    botonEnviar.addEventListener('click', () => { // Renombrado a botonEnviar
+        const mensaje = entradaMensaje.value.trim(); // Renombrado a mensaje
+        if (mensaje) {
+            if (mensaje.startsWith('/')) {
                 // Es un comando
-                sendMessageToServer("COMMAND", message);
+                enviarMensajeAlServidor("COMANDO", mensaje); // Renombrado a "COMANDO"
             } else {
                 // Es un mensaje normal
-                sendMessageToServer("MESSAGE", message);
+                enviarMensajeAlServidor("MENSAJE", mensaje); // Renombrado a "MENSAJE"
             }
-            messageInput.value = '';
+            entradaMensaje.value = '';
         }
     });
 
     // Iniciar la conexión al cargar la página
-    connectWebSocket();
+    conectarWebSocket();
 });

@@ -1,4 +1,4 @@
-// Archivo: src/main/java/org/example/config/CorsConfig.java
+// Archivo: src/main/java/org/example/config/ConfiguracionCors.java
 package org.example.config;
 
 import org.springframework.context.annotation.Bean;
@@ -7,14 +7,14 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
-public class CorsConfig {
+public class ConfiguracionCors { // Renombrado a ConfiguracionCors
     @Bean
-    public WebMvcConfigurer corsConfigurer() {
+    public WebMvcConfigurer configuradorCors() { // Renombrado a configuradorCors
         return new WebMvcConfigurer() {
             @Override
-            public void addCorsMappings(CorsRegistry registry) {
+            public void addCorsMappings(CorsRegistry registro) { // Renombrado a agregarMapeosCors, registro
                 // Permite el acceso a TODOS los endpoints de tu API
-                registry.addMapping("/**")
+                registro.addMapping("/**")
                         .allowedOrigins("*")
                         // Permite los métodos que usa tu API (GET, POST, etc.)
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")

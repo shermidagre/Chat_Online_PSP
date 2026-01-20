@@ -15,10 +15,10 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig {
+public class ConfiguracionSeguridad { // Renombrado a ConfiguracionSeguridad
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain cadenaFiltros(HttpSecurity http) throws Exception { // Renombrado a cadenaFiltros
         http
                 .csrf(csrf -> csrf.disable()) 
                 .authorizeHttpRequests(auth -> auth
@@ -37,16 +37,16 @@ public class SecurityConfig {
 
     // Definimos el usuario que tiene permiso para ver el Swagger
     @Bean
-    public UserDetailsService userDetailsService(PasswordEncoder encoder) {
+    public UserDetailsService servicioDetallesUsuario(PasswordEncoder codificador) { // Renombrado a servicioDetallesUsuario, codificador
         UserDetails admin = User.withUsername("admin")
-                .password(encoder.encode("elvan.2021")) // Esta es la contraseña de acceso
+                .password(codificador.encode("elvan.2021")) // Esta es la contraseña de acceso
                 .roles("ADMIN")
                 .build();
         return new InMemoryUserDetailsManager(admin);
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
+    public PasswordEncoder codificadorContrasenas() { // Renombrado a codificadorContrasenas
         return new BCryptPasswordEncoder();
     }
 }

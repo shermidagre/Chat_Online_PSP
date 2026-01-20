@@ -4,15 +4,15 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 @Service
-public class ServidorService {
+public class ServicioServidor { // Renombrado a ServicioServidor
 
-    private final WeatherService weatherService;
+    private final ServicioClima servicioClima; // Renombrado a servicioClima
 
-    public ServidorService(WeatherService weatherService) {
-        this.weatherService = weatherService;
+    public ServicioServidor(ServicioClima servicioClima) { // Renombrado a ServicioClima
+        this.servicioClima = servicioClima;
     }
 
-    public Mono<String> getWeather(String city) {
-        return weatherService.getWeatherSummary(city);
+    public Mono<String> obtenerClima(String ciudad) { // Renombrado a obtenerClima, ciudad
+        return servicioClima.obtenerResumenClima(ciudad); // Renombrado a obtenerResumenClima
     }
 }

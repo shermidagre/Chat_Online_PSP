@@ -8,7 +8,7 @@ import org.example.dto.Usuarios.UsuariosRequestDTO;
 import org.example.dto.Usuarios.UsuariosResponseDTO;
 import org.example.model.Usuarios;
 import org.example.repository.UsuariosRepository;
-import org.example.service.UsuariosService;
+import org.example.service.ServicioUsuarios; // Importar ServicioUsuarios
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,23 +24,23 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 @RestController
 @CrossOrigin(origins = "*")
-@Tag(name = "Usuarios", description = "Endpoints para interactuar con los usuarios")
-public class UsuariosController {
+@Tag(name = "Usuarios", description = "Endpoints para interactuar con los usuarios") // Mantener tags
+public class ControladorUsuarios { // Renombrado a ControladorUsuarios
 
-    public static final String MAPPING = "/api";
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    public static final String MAPPING = "/api"; // Mantener MAPPING
 
     @Autowired
-    private UsuariosRepository usuariosRepository;
+    private PasswordEncoder codificadorContrasenas; // Renombrado a codificadorContrasenas
+
     @Autowired
-    private UsuariosService usuariosService;
+    private UsuariosRepository repositorioUsuarios; // Renombrado a repositorioUsuarios
+    @Autowired
+    private ServicioUsuarios servicioUsuarios; // Renombrado a servicioUsuarios
 
     @Operation(summary = "Crear un nuevo usuario")
     @PostMapping("/usuarios")
     public ResponseEntity<UsuariosResponseDTO> crearUsuario(@RequestBody UsuariosRequestDTO usuarioDto) {
-        Usuarios nuevoUsuario = usuariosService.crearUsuario(usuarioDto);
+        Usuarios nuevoUsuario = servicioUsuarios.crearUsuario(usuarioDto);
         UsuariosResponseDTO responseDto = new UsuariosResponseDTO(nuevoUsuario);
         return new ResponseEntity<>(responseDto, HttpStatus.CREATED); // 201 Created
     }
@@ -51,24 +51,24 @@ public class UsuariosController {
     public ResponseEntity<UsuariosResponseDTO> actualizarUsuario(@PathVariable Long id,
             @RequestBody UsuariosRequestDTO usuarioDto) {
 
-        return usuariosService.actualizarUsuario(id, usuarioDto)
-                .map(UsuariosResponseDTO::new) // Mapear la entidad a DTO de respuesta
-                .map(ResponseEntity::ok) // Devolver 200 OK
-                .orElseGet(() -> ResponseEntity.notFound().build()); // 404
+        return servicioUsuarios.actualizarUsuario(id, usuarioDto)
+                .map(UsuariosResponseDTO::new)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @Operation(summary = "Obtener todos los usuarios")
     @GetMapping("/usuarios")
-    public List<UsuariosResponseDTO> obtenerUsuarios() { // <--- Devuelve lista de DTOs
-        return usuariosService.obtenerUsuarios().stream()
+    public List<UsuariosResponseDTO> obtenerUsuarios() {
+        return servicioUsuarios.obtenerUsuarios().stream()
                 .map(UsuariosResponseDTO::new)
                 .collect(Collectors.toList());
     }
 
     @Operation(summary = "Obtener usuario por id")
     @GetMapping("/usuarios/{id}")
-    public ResponseEntity<UsuariosResponseDTO> buscarUsuarioPorId(@PathVariable Long id) { // <--- Devuelve DTO
-        return usuariosService.buscarUsuarioPorId(id)
+    public ResponseEntity<UsuariosResponseDTO> buscarUsuarioPorId(@PathVariable Long id) {
+        return servicioUsuarios.buscarUsuarioPorId(id)
                 .map(UsuariosResponseDTO::new)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
@@ -76,9 +76,8 @@ public class UsuariosController {
 
     @Operation(summary = "Eliminar usuario por id")
     @DeleteMapping("/usuarios/{id}")
-    public ResponseEntity<UsuariosResponseDTO> borrarUsuarioPorId(@PathVariable Long id) { // <--- Devuelve DTO del
-                                                                                           // borrado
-        Usuarios usuarioBorrado = usuariosService.borrarUsuarioPorId(id);
+    public ResponseEntity<UsuariosResponseDTO> borrarUsuarioPorId(@PathVariable Long id) {
+        Usuarios usuarioBorrado = servicioUsuarios.borrarUsuarioPorId(id);
 
         if (usuarioBorrado != null) {
             return ResponseEntity.ok(new UsuariosResponseDTO(usuarioBorrado));
@@ -87,13 +86,13 @@ public class UsuariosController {
         }
     }
 
-    @Operation(summary = "Bcekend, verificar si un usuario existe y si tiene contraseña")
+    @Operation(summary = "Backend, verificar si un usuario existe y si tiene contraseña")
     @GetMapping("/usuarios/check/{nombre}")
     public ResponseEntity<Map<String, Object>> verificarEstadoUsuario(@PathVariable String nombre) {
-        Optional<Usuarios> usuarioOpt = usuariosRepository.findByNombre(nombre);
+        Optional<Usuarios> usuarioOpt = repositorioUsuarios.findByNombre(nombre);
 
         if (usuarioOpt.isEmpty()) {
-            return ResponseEntity.status(404).body(null); // Usuario no existe
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null); // Usuario no existe (404 Not Found)
         }
 
         Usuarios usuario = usuarioOpt.get();
@@ -103,8 +102,8 @@ public class UsuariosController {
         respuesta.put("rol", usuario.getTipoUsuario());
 
         // Si es null o vacío, es "usuario virgen" (sin contraseña)
-        boolean tienePassword = (usuario.getPassword() != null && !usuario.getPassword().isEmpty());
-        respuesta.put("tienePassword", tienePassword);
+        boolean tieneContrasena = (usuario.getPassword() != null && !usuario.getPassword().isEmpty());
+        respuesta.put("tieneContrasena", tieneContrasena);
 
         return ResponseEntity.ok(respuesta);
     }
@@ -113,34 +112,34 @@ public class UsuariosController {
     @PostMapping("/usuarios/login")
     public ResponseEntity<?> login(@RequestBody LoginRequestDTO loginDto) {
 
-        Usuarios usuario = usuariosRepository.findById(loginDto.getIdUsuario())
+        Usuarios usuario = repositorioUsuarios.findById(loginDto.getIdUsuario())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         // CASO A: PRIMERA VEZ -> GUARDAR CONTRASEÑA ENCRIPTADA
         if (usuario.getPassword() == null || usuario.getPassword().isEmpty()) {
 
-            String passwordHasheada = passwordEncoder.encode(loginDto.getPassword());
-            usuario.setPassword(passwordHasheada);
+            String contrasenaHasheada = codificadorContrasenas.encode(loginDto.getPassword());
+            usuario.setPassword(contrasenaHasheada);
 
-            usuariosRepository.save(usuario);
-            return ResponseEntity.ok(Map.of("status", "ok", "mensaje", "Contraseña creada correctamente"));
+            repositorioUsuarios.save(usuario);
+            return ResponseEntity.ok(Map.of("estado", "ok", "mensaje", "Contraseña creada correctamente")); // 'status' a 'estado'
         }
 
         // CASO B: LOGIN NORMAL -> VERIFICAR CON MATCHES
-        // passwordEncoder.matches( "lo que escribio el usuario", "el hash de la BD" )
-        if (passwordEncoder.matches(loginDto.getPassword(), usuario.getPassword())) {
-            return ResponseEntity.ok(Map.of("status", "ok", "mensaje", "Login correcto"));
+        // codificadorContrasenas.matches( "lo que escribio el usuario", "el hash de la BD" )
+        if (codificadorContrasenas.matches(loginDto.getPassword(), usuario.getPassword())) {
+            return ResponseEntity.ok(Map.of("estado", "ok", "mensaje", "Login correcto"));
         } else {
-            return ResponseEntity.status(401).body(Map.of("status", "error", "mensaje", "Contraseña incorrecta"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("estado", "error", "mensaje", "Contraseña incorrecta")); // 401 Unauthorized
         }
     }
     @Operation(summary = "Resetear la contraseña de un usuario (ponerla a NULL)")
     @PutMapping("/usuarios/{id}/reset-password")
-    public ResponseEntity<?> resetearPassword(@PathVariable Long id) {
-        Usuarios usuario = usuariosRepository.findById(id).orElse(null);
+    public ResponseEntity<?> resetearContrasena(@PathVariable Long id) { // Renombrado a resetearContrasena
+        Usuarios usuario = repositorioUsuarios.findById(id).orElse(null);
         if(usuario != null) {
             usuario.setPassword(null); // ¡Volvemos a ponerlo a NULL!
-            usuariosRepository.save(usuario);
+            repositorioUsuarios.save(usuario);
             return ResponseEntity.ok("Contraseña reseteada. El usuario la creará al entrar.");
         }
         return ResponseEntity.notFound().build();
@@ -148,13 +147,13 @@ public class UsuariosController {
     @Operation(summary = "Registrar latido de un usuario para marcarlo como online")
     @PostMapping("/usuarios/latido/{nombre}")
     public ResponseEntity<Void> recibirLatido(@PathVariable String nombre) {
-        usuariosService.registrarLatido(nombre);
+        servicioUsuarios.registrarLatido(nombre);
         return ResponseEntity.ok().build();
     }
 
     @Operation(summary = "Ver la lista de usuarios online (han enviado latido en los últimos 5 minutos)")
     @GetMapping("/usuarios/online")
     public ResponseEntity<List<String>> verUsuariosOnline() {
-        return ResponseEntity.ok(usuariosService.obtenerUsuariosOnline());
+        return ResponseEntity.ok(servicioUsuarios.obtenerUsuariosOnline());
     }
 }

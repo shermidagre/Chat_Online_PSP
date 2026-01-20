@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import java.util.List;
 
 @JsonInclude(Include.NON_NULL)
-public record GeminiRequest(
-        List<Content> contents,
-        @JsonProperty("system_instruction") Content systemInstruction
+public record PeticionGemini( // Renombrado a PeticionGemini
+        List<Contenido> contenidos, // Renombrado a contenidos, y Contenido
+        @JsonProperty("system_instruction") Contenido instruccionSistema // Renombrado a instruccionSistema, y Contenido
 ) {}

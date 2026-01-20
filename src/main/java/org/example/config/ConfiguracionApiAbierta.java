@@ -8,24 +8,24 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class OpenApiConfig {
+public class ConfiguracionApiAbierta { // Renombrado a ConfiguracionApiAbierta
 
     @Bean
-    public OpenAPI customOpenAPI() {
+    public OpenAPI apiAbiertaPersonalizada() { // Renombrado a apiAbiertaPersonalizada
         return new OpenAPI()
                 .info(new Info()
-                        .title("⚡Elvan Instalaciones")
+                        .title("⚡Elvan Instalaciones") // Mantener título original
                         .version("1.0.0")
                         .description(generarDescripcion())
                         .contact(new Contact()
                                 .name("Soporte Técnico Elvan")
                                 .email("shermidagre@gmail.com"))
-                              //  .url("https://www.elvaninstalaciones.com"))
+                              //  .url("https://www.elvaninstalaciones.com")) // Mantener URL original
                         .license(new License()
-                                .name("Propiedad Privada - Uso Interno")));
+                                .name("Propiedad Privada - Uso Interno"))); // Mantener licencia original
     }
 
-    private String generarDescripcion() {
+    private String generarDescripcion() { // Ya está en español
         return "### Centro de Control Operativo\n" +
                "Bienvenido al panel de gestión digital de **Elvan Instalaciones**. Esta interfaz permite interactuar con el corazón de la logística y el personal de la empresa de forma centralizada.\n\n" +
                
@@ -39,8 +39,8 @@ public class OpenApiConfig {
                "#### 📖 Guía\n" +
                "Si es su primera vez utilizando esta herramienta, siga estos pasos:\n" +
                "1. **Seleccione un módulo:** Haga clic en cualquiera de las secciones (Usuarios, Artículos, etc.) para ver las acciones disponibles.\n" +
-               "2. **Explorar acción:** Al abrir una acción (ej. 'Obtener todos los artículos'), verá el botón **'Try it out'** (Probar).\n" +
-               "3. **Ejecutar:** Tras pulsar el botón, haga clic en el recuadro azul **'Execute'** para obtener la información actualizada del sistema.\n" +
+               "2. **Explorar acción:** Al abrir una acción (ej. 'Obtener todos los artículos'), verá el botón **'Probar'**.\n" +
+               "3. **Ejecutar:** Tras pulsar el botón, haga clic en el recuadro azul **'Ejecutar'** para obtener la información actualizada del sistema.\n" +
                "4. **Revisar:** El sistema le devolverá una respuesta con los datos solicitados en la sección inferior.";
     }
 }

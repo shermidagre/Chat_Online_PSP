@@ -7,7 +7,7 @@ import java.util.List;
 
 // 🚨 DEBE TENER ESTA ANOTACIÓN
 @JsonInclude(Include.NON_NULL)
-public record Content(
-        List<Part> parts         // Se omite si es nulo (e.g., si se usa functionCall)
-        // Se omite si es nulo (e.g., si se usa parts)
+public record Contenido( // Renombrado a Contenido
+        List<Parte> partes         // Renombrado a partes, y Parte
+        // Se omite si es nulo (e.g., si se usa partes)
 ) {}
