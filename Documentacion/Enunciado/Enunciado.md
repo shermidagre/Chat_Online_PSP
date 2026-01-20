@@ -85,75 +85,27 @@ Se utiliza un protocolo basado en **JSON sobre texto plano**, con las siguientes
 ### *Estructura del proyecto en formaato diagrama de Mermaid :*
 
 ```mermaid
-graph TD
-    %%{init: {'theme': 'default'}}%%
+---
+config:
+  theme: forest
+  layout: elk
+  look: neo
+---
+flowchart LR
+    A["Práctica 02: Chat Corporativo"] --> B["Nivel 1: Mínimo Obligatorio (5 pts)"] & C["Nivel 2: Documentación (1 pt)"] & D["Nivel 3: Identidad y Control (2 pts)"] & E["Nivel 4: SSL/TLS (1.5 pts)"] & F["Nivel 5: Interfaz Gráfica (1 pt)"] & G["Nivel 6: Integración API REST (1 pt)"] & H["Nivel 7: Auditoría/Logs (0.5 pt)"] & I["Nivel 8: ¡Impresionadme! (? pts)"] & Z["Normas Obligatorias"]
+    B --> B1["Concurrencia: Pool de hilos (ExecutorService) ≤10 conexiones"] & B2["Sincronización: Colecciones thread-safe (java.util.concurrent)"] & B3["Separación de responsabilidades: red, hilos, negocio"] & B4@{ label: "Inicio: Pide puerto → 'Ningún cliente conectado'" } & B5["> Nuevo cliente (nick). X usuarios."] & B6@{ label: "Broadcasting: 'nick: mensaje' → reenvío a todos" } & B7@{ label: "Cierre: Envía 'El servidor se desconectó'" } & B8["Configuración: IP, puerto, nickname"] & B9@{ label: "Interfaz: 'Conectado a la sala', notifica entrada" } & B10["Comandos: /bye, /list, /ping"] & B11["Control de excepciones: sin stacktrace crudo"]
+C --> C1["Protocolo: estructura tramas texto/JSON"] & C2["Arquitectura: diseño interno explicado"] & C3["Pruebas: capturas de denegación/bloqueo"]
+D --> D1["Autenticación: login + hash SHA-256"] & D2["Roles: USER / ADMIN"] & D3["Comandos ADMIN: /kick, /shutdown"] & D4["Bloqueo tras 3 fallos de login"]
+E --> E1["Migrar a SSLSocket / SSLServerSocket"]
+F --> F1["Cliente con GUI (Swing/JavaFX)"] & F2["Hilo UI ≠ hilo de red"]
+G --> G1["Integrar funcionalidad vía API REST<br>(ej: clima)"]
+H --> H1["Archivo security.log: IP, fecha, nick"] & H2["Eventos: login OK/KO, uso comandos ADMIN"]
+Z --> Z1["Prohibido ObjectOutputStream/InputStream"] & Z2["Protocolo propio o JSON parseado manual/librería"] & Z3["Servidor nunca debe caerse"] & Z4["Defensa oral: explicar/modificar código en vivo"]
 
-A[Práctica 02: Chat Corporativo] --> B[Nivel 1: Mínimo Obligatorio (5 pts)]
-
-A --> C[Nivel 2: Documentación (1 pt)]
-
-A --> D[Nivel 3: Identidad y Control (2 pts)]
-
-A --> E[Nivel 4: SSL/TLS (1.5 pts)]
-
-A --> F[Nivel 5: Interfaz Gráfica (1 pt)]
-
-A --> G[Nivel 6: Integración API REST (1 pt)]
-
-A --> H[Nivel 7: Auditoría/Logs (0.5 pt)]
-
-A --> I[Nivel 8: ¡Impresionadme! (? pts)]
-
-%% Nivel 1 - Arquitectura y Gestión Técnica
-B --> B1[Concurrencia: Pool de hilos (ExecutorService) ≤10 conexiones]
-B --> B2[Sincronización: Colecciones thread-safe (java.util.concurrent)]
-B --> B3[Separación de responsabilidades: red, hilos, negocio]
-
-%% Nivel 1 - Comportamiento del Servidor
-B --> B4[Inicio: Pide puerto → "Ningún cliente conectado"]
-B --> B5[Conexiones: "> Nuevo cliente (nick). X usuarios."]
-B --> B6[Broadcasting: "nick: mensaje" → reenvío a todos]
-B --> B7[Cierre: Envía "El servidor se desconectó"]
-
-%% Nivel 1 - Comportamiento del Cliente
-B --> B8[Configuración: IP, puerto, nickname]
-B --> B9[Interfaz: "Conectado a la sala", notifica entrada]
-B --> B10[Comandos: /bye, /list, /ping]
-
-%% Nivel 1 - Robustez
-B --> B11[Control de excepciones: sin stacktrace crudo]
-
-%% Nivel 2
-C --> C1[Protocolo: estructura tramas texto/JSON]
-C --> C2[Arquitectura: diseño interno explicado]
-C --> C3[Pruebas: capturas de denegación/bloqueo]
-
-%% Nivel 3
-D --> D1[Autenticación: login + hash SHA-256]
-D --> D2[Roles: USER / ADMIN]
-D --> D3[Comandos ADMIN: /kick, /shutdown]
-D --> D4[Bloqueo tras 3 fallos de login]
-
-%% Nivel 4
-E --> E1[Migrar a SSLSocket / SSLServerSocket]
-
-%% Nivel 5
-F --> F1[Cliente con GUI (Swing/JavaFX)]
-F --> F2[Hilo UI ≠ hilo de red]
-
-%% Nivel 6
-G --> G1[Integrar funcionalidad vía API REST<br>(ej: clima)]
-
-%% Nivel 7
-H --> H1[Archivo security.log: IP, fecha, nick]
-H --> H2[Eventos: login OK/KO, uso comandos ADMIN]
-
-%% Normas generales
-A --> Z[Normas Obligatorias]
-Z --> Z1[Prohibido ObjectOutputStream/InputStream]
-Z --> Z2[Protocolo propio o JSON parseado manual/librería]
-Z --> Z3[Servidor nunca debe caerse]
-Z --> Z4[Defensa oral: explicar/modificar código en vivo]
+B4@{ shape: rect}
+B6@{ shape: rect}
+B7@{ shape: rect}
+B9@{ shape: rect}
 
 ````
 
