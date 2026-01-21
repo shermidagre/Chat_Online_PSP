@@ -1,90 +1,64 @@
 # Anexo: Protocolo de Comunicación del Chat
 
-Este anexo describe el protocolo de comunicación utilizado entre el cliente web (JavaScript) y el servidor de chat (Java) a través de WebSockets. La comunicación se basa en mensajes estructurados en formato JSON.
+Este anexo describe el protocolo de comunicación simplificado utilizado entre un cliente de consola (ej. Netcat) y el `Servidor` de chat. La comunicación se basa exclusivamente en **mensajes de texto plano** separados por saltos de línea.
 
-## Estructura General del Mensaje
+## Conexión Inicial y Nickname
 
-Todos los mensajes intercambiados siguen una estructura JSON básica, definida por el DTO `MensajeProtocolo` en el backend:
+1.  **Conexión:** El cliente establece una conexión TCP estándar con el servidor en el puerto `8081`.
+2.  **Solicitud de Nick:** Inmediatamente después de la conexión, el servidor envía el siguiente mensaje al cliente:
+    ```
+    Bienvenido al chat. Por favor, introduce tu nick:
+    ```
+3.  **Envío de Nick:** El cliente debe responder con una única línea de texto que será su `nick` para la sesión.
+4.  **Confirmación:** El servidor notifica a todos los usuarios la entrada del nuevo cliente y envía un mensaje de bienvenida al propio cliente.
+    ```
+    SISTEMA: <nick> se ha unido al chat.
+    Conectado a la sala. Escribe /bye para salir.
+    ```
 
-```json
-{
-  "tipo": "AUTENTICACION" | "MENSAJE" | "COMANDO" | "NOTIFICACION",
-  "remitente": "nombreDeUsuario" | "Sistema",
-  "contenido": "texto del mensaje o comando",
-  "fechaHora": "2026-01-20T15:30:00Z"
-}
-```
+## Flujo de Mensajes
 
-*   **`tipo` (String):** Indica la categoría del mensaje. Valores posibles:
-    *   `"AUTENTICACION"`: Usado para el proceso de inicio de sesión en el chat.
-    *   `"MENSAJE"`: Un mensaje de chat estándar enviado por un usuario.
-    *   `"COMANDO"`: Una instrucción especial enviada por el usuario (ej., `/list`).
-    *   `"NOTIFICACION"`: Mensajes del sistema al cliente (ej., "usuario se ha unido").
-*   **`remitente` (String):** El nombre de usuario que envía el mensaje. Para mensajes del sistema, suele ser `"Sistema"`.
-*   **`contenido` (String):** El cuerpo principal del mensaje, ya sea el texto de chat, el comando con sus argumentos, o detalles de una notificación.
-*   **`fechaHora` (String - ISO 8601):** Marca de tiempo del mensaje en formato ISO 8601.
+### Mensajes de Usuario
 
-## Mensajes de Control del Servidor (Texto Plano)
+*   **Formato:** Cualquier línea de texto que **no** comience con `/`.
+*   **Funcionamiento:** Cuando un cliente envía un mensaje de texto, el servidor lo recibe y lo reenvía (difunde) a **todos los demás clientes** conectados, precedido por el nick del remitente.
+*   **Ejemplo:**
+    1.  El cliente con nick "Samuel" envía el texto: `Hola a todos`.
+    2.  El servidor recibe el mensaje.
+    3.  El servidor envía a todos los demás clientes la línea: `Samuel: Hola a todos`.
 
-Durante el proceso de autenticación o para ciertos estados críticos, el servidor puede enviar mensajes de control en formato de texto plano (no JSON) antes de que la comunicación JSON esté completamente establecida o en casos específicos. El cliente JavaScript está preparado para manejar estos mensajes.
+### Comandos de Usuario
 
-Ejemplos de mensajes de control en texto plano:
+Los comandos son instrucciones especiales que el cliente puede enviar al servidor. Siempre comienzan con el carácter `/`.
 
-*   `AUTENTICACION_REQUERIDA`: El servidor solicita al cliente que envíe sus credenciales.
-*   `AUTENTICACION_EXITOSA`: Las credenciales fueron aceptadas.
-*   `AUTENTICACION_FALLIDA`: Las credenciales no son válidas.
-*   `AUTENTICACION_BLOQUEADA`: El cliente ha excedido el número de intentos de login.
-*   `ERROR_FORMATO: ...`: El formato del mensaje enviado por el cliente es incorrecto.
-*   `ADIOS: Desconectando...`: Notificación de que el cliente será desconectado.
+*   **/list**:
+    *   **Descripción:** Solicita al servidor una lista de los nicks de todos los usuarios conectados actualmente.
+    *   **Respuesta del Servidor:**
+        ```
+        Usuarios online: Samuel Ana Pedro 
+        ```
 
-## Flujo de Autenticación Detallado (WebSocket)
+*   **/ping**:
+    *   **Descripción:** Comando de diagnóstico para comprobar la conexión con el servidor.
+    *   **Respuesta del Servidor:** Devuelve la palabra "PONG" seguida de la fecha y hora actual del servidor.
+        ```
+        PONG 2026-01-21T10:30:00.123456
+        ```
 
-1.  **Conexión Inicial:** El cliente establece una conexión WebSocket (`wss://`) con el servidor.
-2.  **Solicitud de Credenciales:** El servidor envía el mensaje de control `AUTENTICACION_REQUERIDA` y una indicación de formato (`Introduce tu nombre de usuario y contraseña (ej: usuario:contraseña):`).
-3.  **Envío de Credenciales por el Cliente:** El cliente, utilizando el nombre de usuario y la contraseña obtenidos del formulario de login web, envía un `MensajeProtocolo` con `tipo: "AUTENTICACION"` y el `contenido` en formato `usuario:contraseña` (ej., `{"tipo":"AUTENTICACION", "remitente":"alice", "contenido":"alice:mipassword"}`).
-4.  **Verificación del Servidor:** El servidor verifica estas credenciales contra la base de datos.
-    *   Si son válidas, envía `AUTENTICACION_EXITOSA`.
-    *   Si son inválidas, envía `AUTENTICACION_FALLIDA`.
-    *   Si se excede el número de intentos, envía `AUTENTICACION_BLOQUEADA` y cierra la conexión.
-5.  **Entrada al Chat:** Una vez `AUTENTICACION_EXITOSA`, la comunicación JSON fluye normalmente.
+*   **/bye**:
+    *   **Descripción:** Desconecta al cliente del servidor.
+    *   **Funcionamiento:** El cliente envía el comando y el servidor cierra la conexión para ese cliente. Además, notifica al resto de usuarios que el cliente ha abandonado el chat.
+    *   **Notificación a los demás:**
+        ```
+        SISTEMA: Samuel ha salido del chat.
+        ```
 
-## Tipos de Mensajes JSON (ejemplos)
+### Mensajes del Sistema
 
-### Mensaje de Chat Estándar (tipo: "MENSAJE")
+Son mensajes informativos que el servidor envía a los clientes para notificar eventos. Suelen ir prefijados con `SISTEMA:`.
 
-Enviado por un usuario para comunicarse con los demás.
+*   **Ejemplos:**
+    *   `SISTEMA: <nick> se ha unido al chat.`
+    *   `SISTEMA: <nick> ha salido del chat.`
+    *   `Comando no reconocido: /comando_invalido`
 
-```json
-{
-  "tipo": "MENSAJE",
-  "remitente": "alice",
-  "contenido": "¡Hola a todos en el chat!",
-  "fechaHora": "2026-01-20T15:35:10Z"
-}
-```
-
-### Comando de Usuario (tipo: "COMANDO")
-
-Enviado para ejecutar una acción específica en el servidor.
-
-```json
-{
-  "tipo": "COMANDO",
-  "remitente": "bob",
-  "contenido": "/list",
-  "fechaHora": "2026-01-20T15:36:05Z"
-}
-```
-
-### Notificación del Sistema (tipo: "NOTIFICACION" o texto plano)
-
-Mensajes generados por el servidor para informar a los clientes. En el contexto actual del proyecto, la mayoría de las notificaciones del sistema (ej., "usuario se ha unido") se manejan directamente como texto plano difundido por el `DifusorMensajes`, o a través de los mensajes de control de texto plano mencionados anteriormente.
-```json
-{
-  "tipo": "NOTIFICACION",
-  "remitente": "Sistema",
-  "contenido": "Nuevo usuario 'carlos' se ha unido al chat.",
-  "fechaHora": "2026-01-20T15:40:00Z"
-}
-```
-(Nota: Aunque el DTO `MensajeProtocolo` permite `NOTIFICACION`, en la implementación actual del `DifusorMensajes`, los mensajes de unión/salida de usuario se envían como texto plano preformateado).
