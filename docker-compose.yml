@@ -35,7 +35,7 @@ services:
       - jwt.secret=MiClaveSecretaSuperSeguraParaJWTQueEsMuyLargaYComplejaParaQueNadieLaAdivine
 
   servicio-chat:
-    image: shermidagre/servicio-chat:latest # Usar imagen de Docker Hub
+    build: ./servicio-chat # Construir desde el Dockerfile local
     container_name: servicio-chat
     restart: on-failure
     depends_on:
@@ -44,6 +44,22 @@ services:
       - "8081:8081"
     environment:
       - user-service.url=http://servicio-usuarios:8080
+
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    restart: on-failure
+    depends_on:
+      - servicio-usuarios # Frontend needs backend to be available for API calls
+      - servicio-chat # Frontend needs chat service for WebSocket connection
+    ports:
+      - "3000:80" # Map host port 3000 to container port 80 (Nginx default)
+    environment:
+      # These variables can be used by the React app at build time if needed
+      # REACT_APP_USER_SERVICE_URL: http://servicio-usuarios:8080
+      # REACT_APP_CHAT_SERVICE_WS_URL: ws://servicio-chat:8081/chat
+      - CHOKIDAR_USEPOLLING=true # For hot-reloading in some environments
+
 
 volumes:
   postgres_data:
