@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:14-alpine
+    container_name: chat_db
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: chat_psp
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d chat_psp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  servicio-usuarios:
+    image: shermidagre/servicio-usuarios:latest # Usar imagen de Docker Hub
+    container_name: servicio-usuarios
+    restart: on-failure
+    depends_on:
+      db:
+        condition: service_healthy # Espera a que la base de datos esté saludable
+    ports:
+      - "8080:8080"
+    environment:
+      - spring.datasource.url=jdbc:postgresql://db:5432/chat_psp
+      - spring.datasource.username=user
+      - spring.datasource.password=password
+      - jwt.secret=MiClaveSecretaSuperSeguraParaJWTQueEsMuyLargaYComplejaParaQueNadieLaAdivine
+
+  servicio-chat:
+    image: shermidagre/servicio-chat:latest # Usar imagen de Docker Hub
+    container_name: servicio-chat
+    restart: on-failure
+    depends_on:
+      - servicio-usuarios
+    ports:
+      - "8081:8081"
+    environment:
+      - user-service.url=http://servicio-usuarios:8080
+
+volumes:
+  postgres_data:
