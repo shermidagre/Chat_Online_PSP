@@ -190,13 +190,6 @@ mvn clean compile
 
 ## 🖼️ Capturas
 
-![Cliente CLI](https://ibb.co/TBjfxwW7)  
-*Cliente en modo consola*
-
-![Documentación](https://ibb.co/jvcmtbKR)  
-*Ejemplo de arquitectura y protocolo*
-
-
 
 ---
 
