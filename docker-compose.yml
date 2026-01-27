@@ -1,37 +1,16 @@
 version: '3.8'
 
 services:
-  db:
-    image: postgres:14-alpine
-    container_name: chat_db
-    restart: always
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: chat_psp
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d chat_psp"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   servicio-usuarios:
-    image: shermidagre/servicio-usuarios:latest # Usar imagen de Docker Hub
+    build: servicio-usuarios # Usar imagen de Docker Hub
     container_name: servicio-usuarios
     restart: on-failure
-    depends_on:
-      db:
-        condition: service_healthy # Espera a que la base de datos esté saludable
     ports:
       - "8080:8080"
     environment:
-      - spring.datasource.url=jdbc:postgresql://db:5432/chat_psp
-      - spring.datasource.username=user
-      - spring.datasource.password=password
+      - spring.datasource.url=jdbc:postgresql://aws-1-eu-central-1.pooler.supabase.com:6543/postgres
+      - spring.datasource.username=postgres.zwpzkpaazbjctraqwxky
+      - spring.datasource.password=noseloqueponer
       - jwt.secret=MiClaveSecretaSuperSeguraParaJWTQueEsMuyLargaYComplejaParaQueNadieLaAdivine
 
   servicio-chat:
@@ -55,11 +34,6 @@ services:
     ports:
       - "3000:80" # Map host port 3000 to container port 80 (Nginx default)
     environment:
-      # These variables can be used by the React app at build time if needed
-      # REACT_APP_USER_SERVICE_URL: http://servicio-usuarios:8080
-      # REACT_APP_CHAT_SERVICE_WS_URL: ws://servicio-chat:8081/chat
       - CHOKIDAR_USEPOLLING=true # For hot-reloading in some environments
 
 
-volumes:
-  postgres_data:

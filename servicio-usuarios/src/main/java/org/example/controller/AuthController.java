@@ -1,7 +1,6 @@
-package org.example.controller;
-
 import org.example.model.Usuario;
 import org.example.repository.RepositorioUsuarios;
+import org.example.util.JwtUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -12,18 +11,19 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "*")
 public class AuthController {
 
     private final RepositorioUsuarios repositorioUsuarios;
     private final PasswordEncoder passwordEncoder;
-    // Inyectaremos el JWT util más adelante
-    // private final JwtUtil jwtUtil;
+    private final JwtUtil jwtUtil;
 
-    public AuthController(RepositorioUsuarios repositorioUsuarios, PasswordEncoder passwordEncoder) {
+    public AuthController(RepositorioUsuarios repositorioUsuarios, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
         this.repositorioUsuarios = repositorioUsuarios;
         this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
     }
+
+
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody Map<String, String> credenciales) {
@@ -60,12 +60,20 @@ public class AuthController {
         Usuario usuario = usuarioOpt.get();
 
         if (passwordEncoder.matches(password, usuario.getPassword())) {
-            // Generaremos un token JWT en el siguiente paso
-            // String token = jwtUtil.generateToken(usuario.getNombre());
-            String token = "placeholder-jwt-token-for-" + usuario.getNombre();
+            String token = jwtUtil.generateToken(usuario.getNombre());
             return ResponseEntity.ok(Map.of("token", token));
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("mensaje", "Contraseña incorrecta."));
+        }
+    }
+
+    @GetMapping("/validate")
+    public ResponseEntity<?> validateToken(@RequestParam("token") String token) {
+        if (jwtUtil.validateToken(token)) {
+            String username = jwtUtil.extractUsername(token);
+            return ResponseEntity.ok(Map.of("valid", true, "username", username));
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("valid", false, "message", "Token inválido o expirado."));
         }
     }
 }
