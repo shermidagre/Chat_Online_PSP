@@ -8,20 +8,22 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-/**
- * Servidor TCP SEGURO (SSL/TLS) que se inicia junto con la aplicación Spring Boot.
- * Escucha en el puerto 9000.
- */
 @Component
 public class ServidorSocket implements CommandLineRunner {
 
     private final ServicioChat servicioChat;
     private static final int PUERTO_SOCKET = 9000;
 
-    // Rutas y contraseñas del certificado (Hardcoded para la práctica)
+    // Rutas del certificado SSL
     private static final String KEYSTORE_PATH = "chat_keystore.jks";
     private static final String KEYSTORE_PASSWORD = "123456";
+
+    // 2. DEFINIMOS EL LÍMITE DE USUARIOS (POOL DE HILOS)
+    // Esto crea un grupo de 10 huecos. Si hay 10 ocupados, el 11 espera.
+    private final ExecutorService pool = Executors.newFixedThreadPool(10);
 
     public ServidorSocket(ServicioChat servicioChat) {
         this.servicioChat = servicioChat;
@@ -29,31 +31,24 @@ public class ServidorSocket implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // Configuramos las propiedades del sistema para SSL
         System.setProperty("javax.net.ssl.keyStore", KEYSTORE_PATH);
         System.setProperty("javax.net.ssl.keyStorePassword", KEYSTORE_PASSWORD);
 
-        // Iniciamos el servidor en un Hilo nuevo
         new Thread(() -> {
             try {
-                // Usamos la fábrica de Sockets SSL en lugar del "new ServerSocket" normal
                 SSLServerSocketFactory sslFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
                 SSLServerSocket serverSocket = (SSLServerSocket) sslFactory.createServerSocket(PUERTO_SOCKET);
 
-                System.out.println("=========================================");
-                System.out.println("SERVIDOR SSL (SEGURO) INICIADO EN PUERTO: " + PUERTO_SOCKET);
-                System.out.println("ESPERANDO CLIENTES...");
-                System.out.println("=========================================");
+                System.out.println("=== SERVIDOR SSL INICIADO (MÁX 10 USUARIOS) ===");
 
                 while (true) {
-                    // accept() devuelve un Socket normal, pero internamente ya está encriptado
                     Socket clienteSocket = serverSocket.accept();
-
                     ManejadorCliente manejador = new ManejadorCliente(clienteSocket, servicioChat);
-                    new Thread(manejador).start();
+
+                    // 3. EN LUGAR DE 'new Thread(manejador).start()', USAMOS EL POOL:
+                    pool.execute(manejador);
                 }
             } catch (IOException e) {
-                System.err.println("Error iniciando servidor SSL: " + e.getMessage());
                 e.printStackTrace();
             }
         }).start();
