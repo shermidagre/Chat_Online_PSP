@@ -22,40 +22,63 @@ public class ClienteSocket {
         this.onMessageReceived = onMessageReceived;
     }
 
+    // --- CAMBIO IMPORTANTE: AÑADIDO PARÁMETRO PASSWORD ---
     public void conectar(String host, int puerto, String usuario, String password) throws IOException {
         socket = new Socket(host, puerto);
         out = new PrintWriter(socket.getOutputStream(), true);
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-        // PROTOCOLO ACTUALIZADO: Enviamos también la contraseña
-        // Formato: LOGIN|Usuario|Contraseña
+        // --- CAMBIO PROTOCOLO: Enviamos LOGIN|Usuario|Password ---
+        // Si tu servidor aún no valida contraseña, enviarlo así no suele romper nada,
+        // pero es necesario si el servidor espera 3 partes.
         out.println("LOGIN|" + usuario + "|" + password);
 
         escuchando = true;
+
+        // Iniciamos el hilo de escucha
         new Thread(this::escucharServidor).start();
     }
 
     private void escucharServidor() {
         try {
             String linea;
+            // Leemos constantemente lo que llega del servidor
             while (escuchando && (linea = in.readLine()) != null) {
-                final String mensajeProcesado = procesarMensaje(linea);
 
-                // Actualizar la UI desde el hilo de JavaFX
-                Platform.runLater(() -> {
-                    if (onMessageReceived != null) {
-                        onMessageReceived.accept(mensajeProcesado);
-                    }
-                });
+                // Guardamos la línea original para procesarla
+                String mensajeOriginal = linea;
+
+                // Procesamos para "embellecer" el texto si es mensaje de chat
+                String mensajeProcesado = procesarMensaje(linea);
+
+                // --- CLAVE PARA QUE FUNCIONE EL LOGIN ---
+                // Si el mensaje es de protocolo (OK o ERROR), pasamos el ORIGINAL
+                // para que el Controller detecte el "OK|".
+                // Si es chat, pasamos el procesado.
+                final String aEnviar;
+                if (mensajeOriginal.startsWith("OK|") || mensajeOriginal.startsWith("ERROR|")) {
+                    aEnviar = mensajeOriginal;
+                } else {
+                    aEnviar = mensajeProcesado;
+                }
+
+                if (onMessageReceived != null) {
+                    Platform.runLater(() -> onMessageReceived.accept(aEnviar));
+                }
             }
         } catch (IOException e) {
-            Platform.runLater(() -> onMessageReceived.accept("Desconectado del servidor."));
+            if (escuchando && onMessageReceived != null) {
+                Platform.runLater(() -> onMessageReceived.accept("ERROR|Desconectado del servidor."));
+            }
         }
     }
 
     private String procesarMensaje(String linea) {
         // Parsear lo que viene del servidor (ej: MSG|Pepe|Hola)
-        String[] partes = linea.split("\\|", 3);
+        String[] partes = linea.split("\\|", 3); // Dividir por pipes
+
+        if (partes.length == 0) return linea;
+
         String comando = partes[0];
 
         if ("MSG".equals(comando) && partes.length > 2) {
@@ -65,34 +88,30 @@ public class ClienteSocket {
         } else if ("ERROR".equals(comando) && partes.length > 1) {
             return "[ERROR]: " + partes[1];
         } else {
-            return linea; // Mensaje crudo si no cumple protocolo
+            return linea;
         }
     }
 
     public void enviarMensaje(String usuario, String contenido) {
         if (out != null) {
-            // Protocolo: MSG|Usuario|Contenido
             out.println("MSG|" + usuario + "|" + contenido);
         }
     }
 
-    // Método genérico para enviar comandos crudos
-    public void enviarComando(String cabecera, String argumentos) {
+    // Método para comandos especiales como /kick o /list
+    public void enviarComando(String tipo, String payload) {
         if (out != null) {
-            out.println(cabecera + "|" + argumentos);
+            out.println(tipo + "|" + payload);
         }
     }
-
-
 
     public void desconectar() {
         escuchando = false;
         try {
             if (out != null) out.println("LOGOUT");
-            if (socket != null) socket.close();
+            if (socket != null && !socket.isClosed()) socket.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-
 }

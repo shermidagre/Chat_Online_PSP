@@ -1,8 +1,10 @@
 package com.example.chat.client;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
-import javafx.scene.control.PasswordField; // <--- IMPORTANTE IMPORTAR
+import javafx.scene.control.Label; // <--- IMPORTANTE
+import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
@@ -12,8 +14,10 @@ import java.io.IOException;
 public class ChatController {
 
     @FXML private TextField txtUsuario;
-    @FXML private PasswordField txtPassword; // <--- NUEVA VARIABLE
+    @FXML private PasswordField txtPassword;
     @FXML private Button btnConectar;
+    @FXML private Label lblEstado; // <--- FALTABA ESTA VARIABLE
+
     @FXML private TextArea areaChat;
     @FXML private TextField txtMensaje;
     @FXML private Button btnEnviar;
@@ -26,36 +30,61 @@ public class ChatController {
     @FXML
     public void initialize() {
         cliente = new ClienteSocket();
+
         cliente.setOnMessageReceived(mensaje -> {
-            areaChat.appendText(mensaje + "\n");
+            Platform.runLater(() -> {
+                if (mensaje.startsWith("OK|")) {
+                    // Solo cambiamos de pantalla si el servidor dice OK
+                    panelLogin.setVisible(false);
+                    panelLogin.setManaged(false);
+                    panelChat.setDisable(false);
+                    areaChat.appendText("--- Conectado correctamente ---\n");
+
+                } else if (mensaje.startsWith("ERROR|")) {
+                    // Si hay error (bad pass), lo mostramos y reactivamos el botón
+                    lblEstado.setText(mensaje.substring(6));
+                    btnConectar.setDisable(false);
+
+                } else {
+                    // Mensaje normal de chat
+                    areaChat.appendText(mensaje + "\n");
+                }
+            });
         });
+
         panelChat.setDisable(true);
     }
 
     @FXML
     protected void onConectarClick() {
         String usuario = txtUsuario.getText().trim();
-        String password = txtPassword.getText().trim(); // <--- OBTENER CONTRASEÑA
+        String password = txtPassword.getText().trim();
 
         if (usuario.isEmpty() || password.isEmpty()) {
-            areaChat.appendText("Usuario y contraseña son obligatorios.\n");
+            lblEstado.setText("Usuario y contraseña obligatorios.");
             return;
         }
 
-        try {
-            // Pasamos ambos datos al método conectar
-            cliente.conectar("localhost", 9000, usuario, password);
+        btnConectar.setDisable(true); // Evitar doble click
+        lblEstado.setText("Conectando...");
 
-            this.usuarioActual = usuario;
-            panelLogin.setDisable(true);
-            panelLogin.setVisible(false);
-            panelChat.setDisable(false);
+        // La conexión debe ir en un hilo aparte para no congelar la ventana
+        new Thread(() -> {
+            try {
+                // Intentamos conectar
+                cliente.conectar("localhost", 9000, usuario, password);
+                this.usuarioActual = usuario;
 
-            areaChat.appendText("Intentando conectar como " + usuario + "...\n");
+                // Esperamos a que el servidor mande "OK|" y lo capture el initialize()
 
-        } catch (IOException e) {
-            areaChat.appendText("Error conectando al servidor: " + e.getMessage() + "\n");
-        }
+            } catch (IOException e) {
+                // Si falla la conexión de red (servidor apagado)
+                Platform.runLater(() -> {
+                    lblEstado.setText("Error: Servidor no responde.");
+                    btnConectar.setDisable(false);
+                });
+            }
+        }).start();
     }
 
     @FXML
@@ -63,7 +92,6 @@ public class ChatController {
         String mensaje = txtMensaje.getText().trim();
         if (mensaje.isEmpty()) return;
 
-        // --- LÓGICA DE COMANDOS ---
         if (mensaje.equals("/list")) {
             // Enviar comando WHO (Protocolo: WHO|UsuarioSolicitante)
             cliente.enviarComando("WHO", usuarioActual);
@@ -81,7 +109,6 @@ public class ChatController {
         txtMensaje.clear();
     }
 
-    // Método para llamar al cerrar la ventana
     public void cerrarConexion() {
         if (cliente != null) {
             cliente.desconectar();

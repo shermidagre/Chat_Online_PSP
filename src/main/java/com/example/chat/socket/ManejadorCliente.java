@@ -41,47 +41,79 @@ public class ManejadorCliente implements Runnable {
             while ((linea = in.readLine()) != null) {
                 String[] partes = linea.split("\\|", 3);
                 String comando = partes[0];
-                switch (comando) {
-                    case "LOGIN":
-                        this.username = partes[1];
-                        out.println("INFO|Bienvenido " + this.username);
-                        GestorClientes.broadcast("INFO|El usuario " + this.username + " ha entrado.", this);
-                        break;
 
+                // --- FASE 1: AUTENTICACIÓN ---
+                if (!autenticado) {
+                    if ("LOGIN".equals(comando) && partes.length == 3) {
+                        String user = partes[1];
+                        String pass = partes[2];
+
+                        try {
+                            // 1. Validar contra Base de Datos (Hash y Usuario)
+                            Usuario u = servicioChat.registerUser(user, pass);
+
+                            // 2. Si no lanza excepción, es correcto:
+                            this.username = u.getUsername();
+                            this.role = (u.getRole() != null) ? u.getRole() : "USER";
+                            this.autenticado = true;
+
+                            // 3. Añadir a la lista de conectados
+                            GestorClientes.agregarCliente(this);
+
+                            // 4. ENVIAR 'OK' (CRÍTICO PARA QUE JAVAFX CAMBIE DE PANTALLA)
+                            out.println("OK|Bienvenido al chat " + this.username);
+
+                            // 5. Notificar a los demás y Loguear
+                            GestorClientes.broadcast("INFO|El usuario " + this.username + " ha entrado.", this);
+                            SecurityLog.log(ip, username, "LOGIN EXITOSO");
+
+                        } catch (IllegalArgumentException e) {
+                            // Contraseña incorrecta o error de servicio
+                            out.println("ERROR|Credenciales incorrectas");
+                            SecurityLog.log(ip, user, "INTENTO FALLIDO (Pass incorrecta)");
+                        }
+                    } else {
+                        out.println("ERROR|Debes identificarte: LOGIN|Usuario|Password");
+                    }
+                    continue; // Vuelve a esperar mensaje si no se autenticó
+                }
+
+                // --- FASE 2: USUARIO YA AUTENTICADO ---
+                switch (comando) {
                     case "MSG":
                         if (partes.length > 2) {
-                            String remitente = partes[1];
                             String contenido = partes[2];
-                            // Guardar en BD (Tu código existente)
+                            // Guardar en BD
                             try {
-                                servicioChat.sendMessage(remitente, contenido);
-                            } catch (Exception e) { /*...*/ }
-
-                            GestorClientes.broadcast("MSG|" + remitente + "|" + contenido, this);
+                                servicioChat.sendMessage(this.username, contenido);
+                            } catch (Exception e) {
+                                System.err.println("Error guardando mensaje en BD: " + e.getMessage());
+                            }
+                            // Enviar a todos
+                            GestorClientes.broadcast("MSG|" + this.username + "|" + contenido, this);
                         }
                         break;
 
                     case "WHO":
-                        // El cliente pidió la lista de usuarios
                         String lista = GestorClientes.obtenerListaUsuarios();
                         out.println("INFO|Usuarios conectados: " + lista);
                         break;
 
                     case "KICK":
-                        // Formato: KICK|Solicitante|Victima
-                        if (partes.length > 2) {
-                            String solicitante = partes[1];
-                            String victima = partes[2];
-
-                            // AQUÍ DEBERÍAS COMPROBAR SI 'solicitante' ES ADMIN EN LA BD
-                            // Por ahora lo permitimos a todos para probar:
+                        // Solo ADMIN puede expulsar
+                        if (partes.length > 1 && "ADMIN".equals(this.role)) {
+                            String victima = partes[1];
                             boolean expulsado = GestorClientes.expulsarUsuario(victima);
 
                             if (expulsado) {
-                                GestorClientes.broadcast("INFO|El usuario " + victima + " ha sido expulsado por " + solicitante, null);
+                                GestorClientes.broadcast("INFO|El usuario " + victima + " ha sido expulsado por el admin.", null);
+                                SecurityLog.log(ip, username, "ADMIN KICK: " + victima);
                             } else {
-                                out.println("ERROR|No se encontró al usuario " + victima);
+                                out.println("ERROR|Usuario no encontrado.");
                             }
+                        } else {
+                            out.println("ERROR|No tienes permisos de administrador.");
+                            SecurityLog.log(ip, username, "INTENTO NO AUTORIZADO DE KICK");
                         }
                         break;
 
@@ -115,7 +147,6 @@ public class ManejadorCliente implements Runnable {
         }
     }
 
-    // CORRECCIÓN 3: Restaurado el método que necesita GestorClientes
     public void enviarMensaje(String mensaje) {
         if (out != null) {
             out.println(mensaje);

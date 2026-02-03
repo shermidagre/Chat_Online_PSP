@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Clase estática para cumplir el Nivel 7 (Auditoría).
+ * Clase estática para cumplir el Nivel 7.
  * Escribe eventos en 'security.log'.
  */
 public class SecurityLog {
