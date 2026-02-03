@@ -15,7 +15,7 @@ public class AppCliente extends Application {
     public void start(Stage stage) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(AppCliente.class.getResource("/com/example/chat/client/chat-view.fxml"));
 
-        Scene scene = new Scene(fxmlLoader.load(), 400, 500);
+        Scene scene = new Scene(fxmlLoader.load(), 800, 600); // Pon un tamaño más grande, tipo 800x600 o 900x600
 
         // Guardamos referencia al controller para cerrar conexión al salir
         controller = fxmlLoader.getController();

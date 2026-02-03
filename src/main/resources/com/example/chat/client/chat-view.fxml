@@ -6,32 +6,65 @@
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.text.Font?>
 
-<VBox alignment="CENTER" spacing="10.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.chat.client.ChatController">
-    <padding>
-        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
-    </padding>
+<StackPane stylesheets="@styles.css" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.chat.client.ChatController">
 
-    <VBox fx:id="panelLogin" alignment="CENTER" spacing="10">
-        <Label text="Chat Corporativo - Login">
-            <font>
-                <Font size="18.0" />
-            </font>
-        </Label>
+    <BorderPane fx:id="panelChat" visible="false" style="-fx-background-color: #121212;">
 
-        <TextField fx:id="txtUsuario" promptText="Usuario" maxWidth="200"/>
+        <left>
+            <VBox spacing="15" prefWidth="200" styleClass="sidebar" alignment="TOP_CENTER">
+                <padding><Insets top="30" right="15" bottom="20" left="15"/></padding>
 
-        <PasswordField fx:id="txtPassword" promptText="Contraseña" maxWidth="200"/>
+                <VBox alignment="CENTER" spacing="10">
+                    <Label text="Chat Seguro" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 18px;"/>
+                    <Label text="Online" style="-fx-text-fill: #00e5ff; -fx-font-size: 12px;"/>
+                </VBox>
 
-        <Button fx:id="btnConectar" text="Conectar al Servidor" onAction="#onConectarClick"/>
-        <Label fx:id="lblEstado" textFill="red"/>
+                <VBox spacing="5" alignment="CENTER_LEFT">
+                    <Label text="CANALES" styleClass="sidebar-label"/>
+                    <Button text="# General" maxWidth="Infinity" style="-fx-background-color: #2d2d2d; -fx-text-fill: white; -fx-alignment: CENTER_LEFT;"/>
+                    <Button text="# Anuncios" maxWidth="Infinity" style="-fx-background-color: transparent; -fx-text-fill: gray; -fx-alignment: CENTER_LEFT;"/>
+                </VBox>
+
+                <VBox VBox.vgrow="ALWAYS" />
+
+                <Button text="Cerrar Sesión" onAction="#cerrarConexion" styleClass="button-danger" maxWidth="Infinity"/>
+            </VBox>
+        </left>
+
+        <center>
+            <VBox spacing="10" style="-fx-padding: 20;">
+                <TextArea fx:id="areaChat" editable="false" wrapText="true" VBox.vgrow="ALWAYS" styleClass="chat-area"/>
+
+                <HBox spacing="10" alignment="CENTER">
+                    <TextField fx:id="txtMensaje" promptText="Escribe un mensaje..." HBox.hgrow="ALWAYS" styleClass="text-field"/>
+                    <Button fx:id="btnEnviar" text="Enviar" onAction="#onEnviarClick" defaultButton="true" prefWidth="100"/>
+                </HBox>
+            </VBox>
+        </center>
+    </BorderPane>
+
+    <VBox fx:id="panelLogin" alignment="CENTER" spacing="20" style="-fx-background-color: #121212;">
+        <padding><Insets bottom="40" left="40" right="40" top="40"/></padding>
+
+        <VBox alignment="CENTER" spacing="5" maxWidth="350" style="-fx-background-color: #1e1e1e; -fx-background-radius: 20; -fx-padding: 40; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 20, 0, 0, 10);">
+
+            <Label text="BIENVENIDO" styleClass="titulo-login"/>
+            <Label text="Inicia sesión para acceder a la red" style="-fx-text-fill: #aaaaaa; -fx-padding: 0 0 20 0;"/>
+
+            <TextField fx:id="txtUsuario" promptText="Usuario" prefHeight="45"/>
+            <PasswordField fx:id="txtPassword" promptText="Contraseña" prefHeight="45"/>
+
+            <Label fx:id="lblEstado" text="" style="-fx-text-fill: #ff1744;" wrapText="true"/>
+
+            <Button fx:id="btnConectar" text="CONECTAR AL SERVIDOR" onAction="#onConectarClick" maxWidth="Infinity" prefHeight="45" style="-fx-font-size: 14px;"/>
+        </VBox>
     </VBox>
 
-    <VBox fx:id="panelChat" spacing="10" VBox.vgrow="ALWAYS">
-        <TextArea fx:id="areaChat" editable="false" VBox.vgrow="ALWAYS" wrapText="true"/>
-        <TextField fx:id="txtMensaje" promptText="Escribe un mensaje..." onAction="#onEnviarClick"/>
-        <Button fx:id="btnEnviar" text="Enviar" maxWidth="Infinity" onAction="#onEnviarClick"/>
-    </VBox>
-</VBox>
+</StackPane>

@@ -1,0 +1,93 @@
+/* --- FONDO GENERAL --- */
+.root {
+    -fx-background-color: #121212; /* Negro suave */
+    -fx-font-family: 'Segoe UI', sans-serif;
+}
+
+/* --- TÍTULOS --- */
+.titulo-login {
+    -fx-text-fill: #00e5ff; /* Cian Neón */
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-effect: dropshadow(gaussian, rgba(0, 229, 255, 0.4), 10, 0.5, 0, 0);
+}
+
+/* --- CAJAS DE TEXTO (Inputs) --- */
+.text-field, .password-field {
+    -fx-background-color: #1e1e1e;
+    -fx-text-fill: white;
+    -fx-prompt-text-fill: #6e6e6e;
+    -fx-background-radius: 20;
+    -fx-border-color: #333333;
+    -fx-border-radius: 20;
+    -fx-border-width: 2px;
+    -fx-padding: 10;
+}
+
+/* Efecto al hacer clic en el input */
+.text-field:focused, .password-field:focused {
+    -fx-border-color: #00e5ff; /* Borde Cian al escribir */
+    -fx-background-color: #252525;
+}
+
+/* --- BOTONES --- */
+.button {
+    -fx-background-color: linear-gradient(to right, #00b8d4, #00e5ff);
+    -fx-text-fill: #121212;
+    -fx-font-weight: bold;
+    -fx-background-radius: 20;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 229, 255, 0.3), 10, 0, 0, 0);
+}
+
+.button:hover {
+    -fx-background-color: linear-gradient(to right, #00e5ff, #84ffff);
+    -fx-scale-x: 1.05;
+    -fx-scale-y: 1.05;
+}
+
+.button:pressed {
+    -fx-background-color: #00b8d4;
+}
+
+/* Botón de salir / desconectar (Rojo) */
+.button-danger {
+    -fx-background-color: #ff1744;
+    -fx-text-fill: white;
+}
+.button-danger:hover {
+    -fx-background-color: #ff616f;
+}
+
+/* --- ÁREA DE CHAT --- */
+.chat-area {
+    -fx-control-inner-background: #1e1e1e;
+    -fx-background-color: #1e1e1e;
+    -fx-text-fill: #e0e0e0; /* Texto gris claro */
+    -fx-font-size: 14px;
+    -fx-background-radius: 10;
+    -fx-padding: 10;
+    -fx-highlight-fill: #00e5ff; /* Color de selección de texto */
+    -fx-highlight-text-fill: #000000;
+}
+
+/* Ocultar la barra de scroll fea por defecto y hacerla moderna */
+.scroll-bar:vertical, .scroll-bar:horizontal {
+    -fx-background-color: transparent;
+}
+.scroll-bar:vertical .thumb, .scroll-bar:horizontal .thumb {
+    -fx-background-color: #424242;
+    -fx-background-radius: 5em;
+}
+
+/* --- SIDEBAR (Barra lateral simulada) --- */
+.sidebar {
+    -fx-background-color: #1a1a1a;
+    -fx-border-color: transparent #333 transparent transparent;
+    -fx-border-width: 1;
+}
+
+.sidebar-label {
+    -fx-text-fill: #808080;
+    -fx-font-size: 12px;
+}
