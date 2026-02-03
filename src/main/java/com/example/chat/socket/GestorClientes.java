@@ -28,9 +28,28 @@ public class GestorClientes {
         synchronized (clientesConectados) {
             for (ManejadorCliente cliente : clientesConectados) {
                 // Enviamos a todos (incluido el remitente para que vea su propio mensaje confirmado,
-                // o puedes añadir un if (cliente != remitente) si prefieres).
                 cliente.enviarMensaje(mensaje);
             }
         }
+    }
+    /**
+     * Busca un usuario por nombre y cierra su conexión.
+     * Método necesario para funcionalidad ADMIN (Nivel 3).
+     */
+    public static boolean expulsarUsuario(String targetUsername) {
+        synchronized (clientesConectados) {
+            for (ManejadorCliente cliente : clientesConectados) {
+                if (cliente.getUsername() != null && cliente.getUsername().equals(targetUsername)) {
+                    cliente.enviarMensaje("INFO|Has sido expulsado por el administrador.");
+                    try {
+                        cliente.getSocket().close(); // Esto provocará excepción en su hilo y cerrará limpieza
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

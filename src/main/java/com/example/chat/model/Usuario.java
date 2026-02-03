@@ -38,14 +38,23 @@ public class Usuario {
      */
     private LocalDateTime lastSeen;
 
+
+    @Column(nullable = false)
+    private String password;
+
+    @Column(nullable = false)
+    private String role;
+
     /**
      * Constructor para crear un nuevo usuario con un nombre de usuario dado.
      * La marca de tiempo 'lastSeen' se inicializa automáticamente con la hora actual en el momento de la creación.
      * @param username El nombre de usuario.
      */
-    public Usuario(String username) {
+    public Usuario(String username, String password, String role) {
         this.username = username;
         this.lastSeen = LocalDateTime.now(); // Establece la última vez visto al momento de la creación
+        this.password = password;
+        this.role = role;
     }
     public Usuario() {
         // Constructor vacío necesario para Hibernate

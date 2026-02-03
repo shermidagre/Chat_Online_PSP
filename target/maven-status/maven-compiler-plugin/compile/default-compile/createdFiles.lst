@@ -8,6 +8,7 @@ com\example\chat\repository\RepositorioMensajeChat.class
 com\example\chat\socket\ServidorSocket.class
 com\example\chat\client\Launcher.class
 com\example\chat\dto\PeticionRegistroUsuario.class
+com\example\chat\utils\SecurityLog.class
 com\example\chat\client\ClienteSocket.class
 com\example\chat\client\AppCliente.class
 com\example\chat\service\ServicioChat.class

@@ -9,7 +9,6 @@ import org.springframework.context.annotation.ComponentScan;
  * Esta clase es el punto de entrada para la ejecución del microservicio.
  */
 @SpringBootApplication
-@ComponentScan({"com.example.chat"}) // Asegura que Spring escanee los componentes de este paquete y subpaquetes
 public class AplicacionMicroservicioChat {
 
     /**
