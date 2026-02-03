@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "usuarios") // Nombre de la tabla en la base de datos
 @Data // Genera getters, setters, toString, equals y hashCode automáticamente
-@NoArgsConstructor // Genera un constructor sin argumentos
 @AllArgsConstructor // Genera un constructor con todos los argumentos
 public class Usuario {
 
@@ -47,5 +46,36 @@ public class Usuario {
     public Usuario(String username) {
         this.username = username;
         this.lastSeen = LocalDateTime.now(); // Establece la última vez visto al momento de la creación
+    }
+    public Usuario() {
+        // Constructor vacío necesario para Hibernate
+    }
+
+
+    // Getters y setters
+
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public LocalDateTime getLastSeen() {
+        return lastSeen;
+    }
+
+    public void setLastSeen(LocalDateTime lastSeen) {
+        this.lastSeen = lastSeen;
     }
 }

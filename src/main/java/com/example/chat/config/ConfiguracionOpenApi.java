@@ -26,9 +26,9 @@ public class ConfiguracionOpenApi {
                         .version("1.0.0") // Versión de la API
                         .description("API para las funcionalidades de chat en tiempo real, convertida de una aplicación Java legacy.") // Descripción de la API
                         .contact(new Contact() // Información de contacto
-                                .name("Agente Gemini CLI")
-                                .email("agent@gemini.com"))
+                                .name("terrenaitor")
+                                .email("shermidagre@gmail.com"))
                         .license(new License() // Información de licencia
-                                .name("Propiedad Privada - Uso Interno")));
+                                .name("Uso Interno")));
     }
 }

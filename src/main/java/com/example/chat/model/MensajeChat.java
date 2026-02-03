@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "mensajes_chat") // Nombre de la tabla en la base de datos
 @Data // Genera getters, setters, toString, equals y hashCode automáticamente
-@NoArgsConstructor // Genera un constructor sin argumentos
 @AllArgsConstructor // Genera un constructor con todos los argumentos
 public class MensajeChat {
 
@@ -59,5 +58,43 @@ public class MensajeChat {
         this.content = content;
         this.sender = sender;
         this.timestamp = LocalDateTime.now();
+    }
+
+    public MensajeChat() {
+        // Constructor vacío necesario para Hibernate
+    }
+
+    // Getters y setters
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public Usuario getSender() {
+        return sender;
+    }
+
+    public void setSender(Usuario sender) {
+        this.sender = sender;
     }
 }

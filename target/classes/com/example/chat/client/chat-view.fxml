@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox alignment="CENTER" spacing="10.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.chat.client.ChatController">
+    <padding>
+        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+    </padding>
+
+    <VBox fx:id="panelLogin" alignment="CENTER" spacing="10">
+        <Label text="Chat Corporativo - Login">
+            <font>
+                <Font size="18.0" />
+            </font></Label>
+        <TextField fx:id="txtUsuario" promptText="Ingresa tu nombre de usuario" maxWidth="200"/>
+        <Button fx:id="btnConectar" text="Conectar al Servidor" onAction="#onConectarClick"/>
+    </VBox>
+
+    <VBox fx:id="panelChat" spacing="10" VBox.vgrow="ALWAYS">
+        <TextArea fx:id="areaChat" editable="false" wrapText="true" VBox.vgrow="ALWAYS" prefHeight="300"/>
+        <HBox spacing="10">
+            <TextField fx:id="txtMensaje" promptText="Escribe un mensaje..." HBox.hgrow="ALWAYS" onAction="#onEnviarClick"/>
+            <Button fx:id="btnEnviar" text="Enviar" onAction="#onEnviarClick"/>
+        </HBox>
+    </VBox>
+</VBox>
