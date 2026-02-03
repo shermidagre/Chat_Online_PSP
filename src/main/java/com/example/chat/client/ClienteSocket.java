@@ -22,17 +22,16 @@ public class ClienteSocket {
         this.onMessageReceived = onMessageReceived;
     }
 
-    public void conectar(String host, int puerto, String usuario) throws IOException {
+    public void conectar(String host, int puerto, String usuario, String password) throws IOException {
         socket = new Socket(host, puerto);
         out = new PrintWriter(socket.getOutputStream(), true);
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-        // Enviar comando de LOGIN según protocolo
-        out.println("LOGIN|" + usuario);
+        // PROTOCOLO ACTUALIZADO: Enviamos también la contraseña
+        // Formato: LOGIN|Usuario|Contraseña
+        out.println("LOGIN|" + usuario + "|" + password);
 
         escuchando = true;
-
-        // Iniciamos el hilo de escucha (IMPORTANTE PARA NIVEL 5)
         new Thread(this::escucharServidor).start();
     }
 
@@ -77,6 +76,15 @@ public class ClienteSocket {
         }
     }
 
+    // Método genérico para enviar comandos crudos
+    public void enviarComando(String cabecera, String argumentos) {
+        if (out != null) {
+            out.println(cabecera + "|" + argumentos);
+        }
+    }
+
+
+
     public void desconectar() {
         escuchando = false;
         try {
@@ -86,4 +94,5 @@ public class ClienteSocket {
             e.printStackTrace();
         }
     }
+
 }

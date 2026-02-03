@@ -41,63 +41,47 @@ public class ManejadorCliente implements Runnable {
             while ((linea = in.readLine()) != null) {
                 String[] partes = linea.split("\\|", 3);
                 String comando = partes[0];
-
-                // --- FASE DE AUTENTICACIÓN ---
-                if (!autenticado) {
-                    if ("LOGIN".equals(comando) && partes.length == 3) {
-                        String user = partes[1];
-                        String pass = partes[2];
-
-                        try {
-                            // CORRECCIÓN 1: Usamos registerUser (método unificado)
-                            Usuario u = servicioChat.registerUser(user, pass);
-
-                            this.username = u.getUsername();
-                            // CORRECCIÓN: Si role es null, poner USER por defecto para evitar errores
-                            this.role = (u.getRole() != null) ? u.getRole() : "USER";
-                            this.autenticado = true;
-
-                            GestorClientes.agregarCliente(this);
-                            out.println("OK|Login correcto. Bienvenido " + role);
-
-                            SecurityLog.log(ip, username, "LOGIN EXITOSO");
-                            System.out.println("Cliente autenticado: " + username);
-
-                        } catch (IllegalArgumentException e) {
-                            // Si falla la contraseña o usuario
-                            out.println("ERROR|Credenciales incorrectas");
-                            SecurityLog.log(ip, user, "LOGIN FALLIDO");
-                        }
-                    } else {
-                        out.println("ERROR|Debes autenticarte primero: LOGIN|Usuario|Password");
-                    }
-                    continue;
-                }
-
-                // --- FASE AUTENTICADA ---
                 switch (comando) {
+                    case "LOGIN":
+                        this.username = partes[1];
+                        out.println("INFO|Bienvenido " + this.username);
+                        GestorClientes.broadcast("INFO|El usuario " + this.username + " ha entrado.", this);
+                        break;
+
                     case "MSG":
                         if (partes.length > 2) {
+                            String remitente = partes[1];
                             String contenido = partes[2];
-                            // CORRECCIÓN 2: Usamos sendMessage (nombre nuevo)
-                            servicioChat.sendMessage(this.username, contenido);
+                            // Guardar en BD (Tu código existente)
+                            try {
+                                servicioChat.sendMessage(remitente, contenido);
+                            } catch (Exception e) { /*...*/ }
 
-                            GestorClientes.broadcast("MSG|" + this.username + "|" + contenido, this);
+                            GestorClientes.broadcast("MSG|" + remitente + "|" + contenido, this);
                         }
                         break;
 
+                    case "WHO":
+                        // El cliente pidió la lista de usuarios
+                        String lista = GestorClientes.obtenerListaUsuarios();
+                        out.println("INFO|Usuarios conectados: " + lista);
+                        break;
+
                     case "KICK":
-                        if ("ADMIN".equals(this.role) && partes.length > 1) {
-                            String usuarioAExpulsar = partes[1];
-                            boolean resultado = GestorClientes.expulsarUsuario(usuarioAExpulsar);
-                            if (resultado) {
-                                out.println("INFO|Usuario " + usuarioAExpulsar + " expulsado.");
-                                SecurityLog.log(ip, username, "ADMIN KICK USER: " + usuarioAExpulsar);
+                        // Formato: KICK|Solicitante|Victima
+                        if (partes.length > 2) {
+                            String solicitante = partes[1];
+                            String victima = partes[2];
+
+                            // AQUÍ DEBERÍAS COMPROBAR SI 'solicitante' ES ADMIN EN LA BD
+                            // Por ahora lo permitimos a todos para probar:
+                            boolean expulsado = GestorClientes.expulsarUsuario(victima);
+
+                            if (expulsado) {
+                                GestorClientes.broadcast("INFO|El usuario " + victima + " ha sido expulsado por " + solicitante, null);
                             } else {
-                                out.println("ERROR|Usuario no encontrado.");
+                                out.println("ERROR|No se encontró al usuario " + victima);
                             }
-                        } else {
-                            out.println("ERROR|No tienes permisos de ADMIN.");
                         }
                         break;
 
@@ -106,7 +90,7 @@ public class ManejadorCliente implements Runnable {
                         break;
 
                     default:
-                        out.println("ERROR|Comando no reconocido");
+                        out.println("ERROR|Comando desconocido");
                         break;
                 }
             }

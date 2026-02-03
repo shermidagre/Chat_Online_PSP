@@ -32,21 +32,29 @@ public class GestorClientes {
             }
         }
     }
-    /**
-     * Busca un usuario por nombre y cierra su conexión.
-     * Método necesario para funcionalidad ADMIN (Nivel 3).
-     */
-    public static boolean expulsarUsuario(String targetUsername) {
+    public static String obtenerListaUsuarios() {
         synchronized (clientesConectados) {
-            for (ManejadorCliente cliente : clientesConectados) {
-                if (cliente.getUsername() != null && cliente.getUsername().equals(targetUsername)) {
-                    cliente.enviarMensaje("INFO|Has sido expulsado por el administrador.");
+            StringBuilder sb = new StringBuilder();
+            for (ManejadorCliente c : clientesConectados) {
+                sb.append(c.getUsername()).append(", ");
+            }
+            return sb.toString();
+        }
+    }
+
+    // Busca un usuario por nombre, cierra su socket y lo saca de la lista
+    public static boolean expulsarUsuario(String nombreVictima) {
+        synchronized (clientesConectados) {
+            for (ManejadorCliente c : clientesConectados) {
+                if (c.getUsername().equals(nombreVictima)) {
                     try {
-                        cliente.getSocket().close(); // Esto provocará excepción en su hilo y cerrará limpieza
+                        c.enviarMensaje("INFO|Has sido expulsado del servidor.");
+                        c.getSocket().close(); // Esto forzará su desconexión
+                        clientesConectados.remove(c);
+                        return true;
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    return true;
                 }
             }
         }
