@@ -1,6 +1,8 @@
 package com.example.chat.client;
 
 import javafx.application.Platform;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -15,46 +17,45 @@ public class ClienteSocket {
     private BufferedReader in;
     private boolean escuchando = false;
 
-    // Callback para enviar mensajes a la Interfaz Gráfica
+    // Configuración SSL (Debe coincidir con la del servidor para esta práctica)
+    private static final String TRUSTSTORE_PATH = "chat_keystore.jks";
+    private static final String TRUSTSTORE_PASSWORD = "123456";
+
     private Consumer<String> onMessageReceived;
 
     public void setOnMessageReceived(Consumer<String> onMessageReceived) {
         this.onMessageReceived = onMessageReceived;
     }
 
-    // --- CAMBIO IMPORTANTE: AÑADIDO PARÁMETRO PASSWORD ---
     public void conectar(String host, int puerto, String usuario, String password) throws IOException {
-        socket = new Socket(host, puerto);
+        // 1. Decimos al cliente que confíe en nuestro certificado "casero"
+        System.setProperty("javax.net.ssl.trustStore", TRUSTSTORE_PATH);
+        System.setProperty("javax.net.ssl.trustStorePassword", TRUSTSTORE_PASSWORD);
+
+        // 2. Creamos el Socket Seguro
+        SSLSocketFactory sslFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+        socket = sslFactory.createSocket(host, puerto);
+
+        // Opcional: Forzar inicio del handshake para verificar conexión inmediata
+        ((SSLSocket) socket).startHandshake();
+
         out = new PrintWriter(socket.getOutputStream(), true);
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-        // --- CAMBIO PROTOCOLO: Enviamos LOGIN|Usuario|Password ---
-        // Si tu servidor aún no valida contraseña, enviarlo así no suele romper nada,
-        // pero es necesario si el servidor espera 3 partes.
+        // Enviamos LOGIN
         out.println("LOGIN|" + usuario + "|" + password);
 
         escuchando = true;
-
-        // Iniciamos el hilo de escucha
         new Thread(this::escucharServidor).start();
     }
 
     private void escucharServidor() {
         try {
             String linea;
-            // Leemos constantemente lo que llega del servidor
             while (escuchando && (linea = in.readLine()) != null) {
-
-                // Guardamos la línea original para procesarla
                 String mensajeOriginal = linea;
-
-                // Procesamos para "embellecer" el texto si es mensaje de chat
                 String mensajeProcesado = procesarMensaje(linea);
 
-                // --- CLAVE PARA QUE FUNCIONE EL LOGIN ---
-                // Si el mensaje es de protocolo (OK o ERROR), pasamos el ORIGINAL
-                // para que el Controller detecte el "OK|".
-                // Si es chat, pasamos el procesado.
                 final String aEnviar;
                 if (mensajeOriginal.startsWith("OK|") || mensajeOriginal.startsWith("ERROR|")) {
                     aEnviar = mensajeOriginal;
@@ -68,15 +69,13 @@ public class ClienteSocket {
             }
         } catch (IOException e) {
             if (escuchando && onMessageReceived != null) {
-                Platform.runLater(() -> onMessageReceived.accept("ERROR|Desconectado del servidor."));
+                Platform.runLater(() -> onMessageReceived.accept("ERROR|Desconectado del servidor SSL."));
             }
         }
     }
 
     private String procesarMensaje(String linea) {
-        // Parsear lo que viene del servidor (ej: MSG|Pepe|Hola)
-        String[] partes = linea.split("\\|", 3); // Dividir por pipes
-
+        String[] partes = linea.split("\\|", 3);
         if (partes.length == 0) return linea;
 
         String comando = partes[0];
@@ -93,16 +92,11 @@ public class ClienteSocket {
     }
 
     public void enviarMensaje(String usuario, String contenido) {
-        if (out != null) {
-            out.println("MSG|" + usuario + "|" + contenido);
-        }
+        if (out != null) out.println("MSG|" + usuario + "|" + contenido);
     }
 
-    // Método para comandos especiales como /kick o /list
     public void enviarComando(String tipo, String payload) {
-        if (out != null) {
-            out.println(tipo + "|" + payload);
-        }
+        if (out != null) out.println(tipo + "|" + payload);
     }
 
     public void desconectar() {
