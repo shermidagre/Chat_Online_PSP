@@ -9,8 +9,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 /**
- * Servidor TCP que se inicia junto con la aplicación Spring Boot.
- * Escucha en el puerto 9000 (distinto al 8080 de la web).
+ * TCP server that starts with the Spring Boot application.
+ * Listens on port 9000 (different from the web's 8080).
  */
 @Component
 public class ServidorSocket implements CommandLineRunner {
@@ -18,25 +18,34 @@ public class ServidorSocket implements CommandLineRunner {
     private final ServicioChat servicioChat;
     private static final int PUERTO_SOCKET = 9000;
 
-    // Inyectamos el servicio para pasárselo a los hilos clientes
+    /**
+     * Constructs a new socket server.
+     * @param servicioChat the chat service.
+     */
     public ServidorSocket(ServicioChat servicioChat) {
         this.servicioChat = servicioChat;
     }
 
+    /**
+     * This method is executed when the Spring Boot application starts.
+     * It starts the TCP socket server in a new thread.
+     * @param args command line arguments.
+     * @throws Exception if an error occurs.
+     */
     @Override
     public void run(String... args) throws Exception {
-        // Iniciamos el servidor en un Hilo nuevo para no bloquear el arranque de Spring Web
+        // We start the server in a new Thread so as not to block the startup of Spring Web
         new Thread(() -> {
             try (ServerSocket serverSocket = new ServerSocket(PUERTO_SOCKET)) {
                 System.out.println("=========================================");
-                System.out.println("SERVIDOR SOCKET TCP INICIADO EN PUERTO: " + PUERTO_SOCKET);
-                System.out.println("ESPERANDO CLIENTES JAVAFX...");
+                System.out.println("TCP SOCKET SERVER STARTED ON PORT: " + PUERTO_SOCKET);
+                System.out.println("WAITING FOR JAVAFX CLIENTS...");
                 System.out.println("=========================================");
 
                 while (true) {
                     Socket clienteSocket = serverSocket.accept();
-                    // Por cada cliente, lanzamos un nuevo hilo ManejadorCliente
-                    // Le pasamos el servicioChat para que el hilo pueda guardar en BD
+                    // For each client, we launch a new ManejadorCliente thread
+                    // We pass the servicioChat so that the thread can save to the DB
                     ManejadorCliente manejador = new ManejadorCliente(clienteSocket, servicioChat);
                     new Thread(manejador).start();
                 }

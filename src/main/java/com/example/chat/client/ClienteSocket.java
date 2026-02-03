@@ -8,6 +8,11 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.function.Consumer;
 
+/**
+ * The client-side socket implementation for the chat application.
+ * This class handles the connection to the server, sending and receiving messages,
+ * and updating the UI.
+ */
 public class ClienteSocket {
 
     private Socket socket;
@@ -15,34 +20,48 @@ public class ClienteSocket {
     private BufferedReader in;
     private boolean escuchando = false;
 
-    // Callback para enviar mensajes a la Interfaz Gráfica
+    // Callback to send messages to the GUI
     private Consumer<String> onMessageReceived;
 
+    /**
+     * Sets the callback for when a message is received from the server.
+     * @param onMessageReceived the callback function.
+     */
     public void setOnMessageReceived(Consumer<String> onMessageReceived) {
         this.onMessageReceived = onMessageReceived;
     }
 
+    /**
+     * Connects to the server with the given host, port, and username.
+     * @param host the server host.
+     * @param puerto the server port.
+     * @param usuario the username.
+     * @throws IOException if an I/O error occurs when creating the socket.
+     */
     public void conectar(String host, int puerto, String usuario) throws IOException {
         socket = new Socket(host, puerto);
         out = new PrintWriter(socket.getOutputStream(), true);
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-        // Enviar comando de LOGIN según protocolo
+        // Send LOGIN command according to protocol
         out.println("LOGIN|" + usuario);
 
         escuchando = true;
 
-        // Iniciamos el hilo de escucha (IMPORTANTE PARA NIVEL 5)
+        // Start the listening thread (IMPORTANT FOR LEVEL 5)
         new Thread(this::escucharServidor).start();
     }
 
+    /**
+     * Listens for messages from the server in a separate thread.
+     */
     private void escucharServidor() {
         try {
             String linea;
             while (escuchando && (linea = in.readLine()) != null) {
                 final String mensajeProcesado = procesarMensaje(linea);
 
-                // Actualizar la UI desde el hilo de JavaFX
+                // Update the UI from the JavaFX thread
                 Platform.runLater(() -> {
                     if (onMessageReceived != null) {
                         onMessageReceived.accept(mensajeProcesado);
@@ -50,33 +69,46 @@ public class ClienteSocket {
                 });
             }
         } catch (IOException e) {
-            Platform.runLater(() -> onMessageReceived.accept("Desconectado del servidor."));
+            Platform.runLater(() -> onMessageReceived.accept("Disconnected from the server."));
         }
     }
 
+    /**
+     * Processes a message received from the server.
+     * @param linea the message line.
+     * @return the processed message to be displayed in the UI.
+     */
     private String procesarMensaje(String linea) {
-        // Parsear lo que viene del servidor (ej: MSG|Pepe|Hola)
+        // Parse what comes from the server (e.g., MSG|Pepe|Hola)
         String[] partes = linea.split("\\|", 3);
         String comando = partes[0];
 
         if ("MSG".equals(comando) && partes.length > 2) {
             return partes[1] + ": " + partes[2];
         } else if ("INFO".equals(comando) && partes.length > 1) {
-            return "[SISTEMA]: " + partes[1];
+            return "[SYSTEM]: " + partes[1];
         } else if ("ERROR".equals(comando) && partes.length > 1) {
             return "[ERROR]: " + partes[1];
         } else {
-            return linea; // Mensaje crudo si no cumple protocolo
+            return linea; // Raw message if it does not comply with the protocol
         }
     }
 
+    /**
+     * Sends a message to the server.
+     * @param usuario the username of the sender.
+     * @param contenido the content of the message.
+     */
     public void enviarMensaje(String usuario, String contenido) {
         if (out != null) {
-            // Protocolo: MSG|Usuario|Contenido
+            // Protocol: MSG|User|Content
             out.println("MSG|" + usuario + "|" + contenido);
         }
     }
 
+    /**
+     * Disconnects from the server.
+     */
     public void desconectar() {
         escuchando = false;
         try {

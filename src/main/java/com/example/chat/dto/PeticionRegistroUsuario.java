@@ -1,25 +1,44 @@
 package com.example.chat.dto;
 
 /**
- * DTO para la solicitud de registro o identificación de un usuario.
+ * Data Transfer Object (DTO) for user registration or identification requests.
+ * This class encapsulates the username provided by the client when they
+ * want to register or log in to the chat service.
  */
 public class PeticionRegistroUsuario {
 
     private String username;
 
-    // Constructor sin argumentos (necesario para JSON/Jackson)
+    /**
+     * Default constructor.
+     * Required for JSON/Jackson serialization/deserialization.
+     */
     public PeticionRegistroUsuario() {
     }
 
-    // Constructor con todos los argumentos
+    /**
+     * Constructs a new user registration request with the given username.
+     *
+     * @param username the username of the user to register or log in.
+     */
     public PeticionRegistroUsuario(String username) {
         this.username = username;
     }
 
+    /**
+     * Returns the username from the request.
+     *
+     * @return the username.
+     */
     public String getUsername() {
         return username;
     }
 
+    /**
+     * Sets the username for the request.
+     *
+     * @param username the username to set.
+     */
     public void setUsername(String username) {
         this.username = username;
     }

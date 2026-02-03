@@ -11,20 +11,32 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Service class for chat-related operations.
+ * This class contains the business logic for user registration, sending messages,
+ * and retrieving chat history.
+ */
 @Service
 public class ServicioChat {
 
     private final RepositorioUsuario repositorioUsuario;
     private final RepositorioMensajeChat repositorioMensajeChat;
 
+    /**
+     * Constructs a new chat service with the given repositories.
+     * @param repositorioUsuario the user repository.
+     * @param repositorioMensajeChat the chat message repository.
+     */
     public ServicioChat(RepositorioUsuario repositorioUsuario, RepositorioMensajeChat repositorioMensajeChat) {
         this.repositorioUsuario = repositorioUsuario;
         this.repositorioMensajeChat = repositorioMensajeChat;
     }
 
     /**
-     * Registra un usuario o lo devuelve si ya existe.
-     * Método necesario para el endpoint /usuarios/registrar
+     * Registers a user or returns the user if they already exist.
+     *
+     * @param username the username to register.
+     * @return the registered or existing user.
      */
     @Transactional
     public Usuario registerUser(String username) {
@@ -35,6 +47,11 @@ public class ServicioChat {
                 });
     }
 
+    /**
+     * Updates the last seen timestamp for a user.
+     * If the user does not exist, a new user is created.
+     * @param username the username of the user to update.
+     */
     @Transactional
     public void updateLastSeen(String username) {
         Usuario usuario = repositorioUsuario.findByUsername(username)
@@ -46,6 +63,14 @@ public class ServicioChat {
         repositorioUsuario.save(usuario);
     }
 
+    /**
+     * Sends a chat message from a user.
+     * If the user does not exist, a new user is created.
+     *
+     * @param username the username of the sender.
+     * @param content  the content of the message.
+     * @return the saved chat message.
+     */
     @Transactional
     public MensajeChat sendMessage(String username, String content) {
         Usuario sender = repositorioUsuario.findByUsername(username)
@@ -56,8 +81,10 @@ public class ServicioChat {
     }
 
     /**
-     * Obtiene los mensajes recientes.
-     * Método necesario para el endpoint GET /mensajes
+     * Retrieves the most recent chat messages.
+     *
+     * @param limit the maximum number of messages to retrieve.
+     * @return a list of recent chat messages.
      */
     @Transactional
     public List<MensajeChat> getRecentMessages(int limit) {
@@ -66,6 +93,12 @@ public class ServicioChat {
         return repositorioMensajeChat.findTop20ByOrderByTimestampDesc();
     }
 
+    /**
+     * Retrieves a list of online users.
+     * A user is considered online if they have been active in the last 5 minutes.
+     *
+     * @return a list of usernames of online users.
+     */
     @Transactional
     public List<String> getOnlineUsers() {
         LocalDateTime fiveMinutesAgo = LocalDateTime.now().minusMinutes(5);
@@ -75,6 +108,10 @@ public class ServicioChat {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Deletes a user and all their messages.
+     * @param username the username of the user to delete.
+     */
     @Transactional
     public void deleteUser(String username) {
         repositorioUsuario.findByUsername(username).ifPresent(usuario -> {

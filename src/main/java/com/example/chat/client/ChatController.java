@@ -8,6 +8,10 @@ import javafx.scene.layout.VBox;
 
 import java.io.IOException;
 
+/**
+ * The controller for the chat client's user interface.
+ * This class handles user interactions and communicates with the socket client.
+ */
 public class ChatController {
 
     @FXML private TextField txtUsuario;
@@ -21,40 +25,52 @@ public class ChatController {
     private ClienteSocket cliente;
     private String usuarioActual;
 
+    /**
+     * Initializes the controller class.
+     * This method is automatically called after the fxml file has been loaded.
+     */
     @FXML
     public void initialize() {
         cliente = new ClienteSocket();
 
-        // Definimos qué hacer cuando llega un mensaje del socket
+        // Define what to do when a message arrives from the socket
         cliente.setOnMessageReceived(mensaje -> {
             areaChat.appendText(mensaje + "\n");
         });
 
-        // Estado inicial visual
+        // Initial visual state
         panelChat.setDisable(true);
     }
 
+    /**
+     * Handles the connect button click event.
+     * It connects the client to the server and switches to the chat view.
+     */
     @FXML
     protected void onConectarClick() {
         String usuario = txtUsuario.getText().trim();
         if (usuario.isEmpty()) return;
 
         try {
-            // Conectar al puerto 9000 (Socket Server), NO al 8080 (Web)
+            // Connect to port 9000 (Socket Server), NOT 8080 (Web)
             cliente.conectar("localhost", 9000, usuario);
 
             this.usuarioActual = usuario;
             panelLogin.setDisable(true);
-            panelLogin.setVisible(false); // Ocultar login
-            panelChat.setDisable(false);  // Habilitar chat
+            panelLogin.setVisible(false); // Hide login
+            panelChat.setDisable(false);  // Enable chat
 
-            areaChat.appendText("Conectado como " + usuario + "\n");
+            areaChat.appendText("Connected as " + usuario + "\n");
 
         } catch (IOException e) {
-            areaChat.appendText("Error conectando al servidor: " + e.getMessage() + "\n");
+            areaChat.appendText("Error connecting to server: " + e.getMessage() + "\n");
         }
     }
 
+    /**
+     * Handles the send button click event.
+     * It sends the message from the text field to the server.
+     */
     @FXML
     protected void onEnviarClick() {
         String mensaje = txtMensaje.getText().trim();
@@ -64,7 +80,10 @@ public class ChatController {
         }
     }
 
-    // Método para llamar al cerrar la ventana
+    /**
+     * Closes the connection to the server.
+     * This method is called when the application window is closed.
+     */
     public void cerrarConexion() {
         if (cliente != null) {
             cliente.desconectar();
